@@ -1,0 +1,1787 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+  <title>ACEtech Punch List Manager</title>
+  <style>
+    /* === BRAND COLORS ===
+       Royal Blue  : #003087
+       Texas Orange: #BF5700
+    */
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --blue:        #003087;
+      --blue-mid:    #1a4fa8;
+      --blue-light:  #e8f0fd;
+      --orange:      #BF5700;
+      --orange-mid:  #d96500;
+      --orange-light:#fff3e6;
+      --black:       #111111;
+      --white:       #ffffff;
+      --gray-50:     #f8fafc;
+      --gray-100:    #f1f5f9;
+      --gray-200:    #e2e8f0;
+      --gray-300:    #cbd5e1;
+      --gray-400:    #94a3b8;
+      --gray-500:    #64748b;
+      --gray-600:    #475569;
+      --gray-700:    #334155;
+      --gray-800:    #1e293b;
+      --success:     #16a34a;
+      --info:        #2563eb;
+      --warning:     #d97706;
+      --danger:      #dc2626;
+      --radius:      8px;
+      --shadow:      0 1px 3px rgba(0,0,0,0.1), 0 1px 2px rgba(0,0,0,0.06);
+      --shadow-md:   0 4px 12px rgba(0,0,0,0.1);
+      --shadow-lg:   0 10px 30px rgba(0,0,0,0.15);
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+      background: #eef2f8;
+      color: var(--gray-800);
+      min-height: 100vh;
+      font-size: 14px;
+    }
+
+    /* ===========================
+       HEADER
+    =========================== */
+    .app-header {
+      background: var(--blue);
+      position: sticky;
+      top: 0;
+      z-index: 100;
+      box-shadow: 0 3px 16px rgba(0,0,0,0.35);
+    }
+
+    .header-top {
+      display: flex;
+      align-items: center;
+      height: 60px;
+      padding: 0 16px;
+      gap: 12px;
+      border-bottom: 1px solid rgba(255,255,255,0.12);
+    }
+
+    /* Logo */
+    .header-logo {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      flex-shrink: 0;
+      text-decoration: none;
+    }
+    .logo-img {
+      height: 40px;
+      width: auto;
+      object-fit: contain;
+      border-radius: 6px;
+    }
+    .logo-fallback {
+      display: none;
+      background: var(--orange);
+      color: white;
+      font-weight: 900;
+      font-size: 13px;
+      padding: 6px 10px;
+      border-radius: 7px;
+      letter-spacing: 0.5px;
+    }
+    .logo-text {
+      display: flex;
+      flex-direction: column;
+    }
+    .logo-name {
+      font-weight: 800;
+      font-size: 16px;
+      color: white;
+      letter-spacing: -0.3px;
+      line-height: 1;
+    }
+    .logo-sub {
+      font-size: 9.5px;
+      font-weight: 500;
+      color: rgba(255,255,255,0.5);
+      text-transform: uppercase;
+      letter-spacing: 0.8px;
+      margin-top: 2px;
+    }
+
+    .header-project {
+      flex: 1;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      max-width: 380px;
+    }
+
+    .proj-select {
+      flex: 1;
+      background: rgba(255,255,255,0.12);
+      border: 1px solid rgba(255,255,255,0.25);
+      color: white;
+      padding: 7px 10px;
+      border-radius: 7px;
+      font-size: 13px;
+      font-weight: 500;
+      cursor: pointer;
+      outline: none;
+    }
+    .proj-select option { color: var(--gray-800); background: white; }
+
+    .btn-hdr {
+      background: var(--orange);
+      color: white;
+      border: none;
+      padding: 7px 13px;
+      border-radius: 7px;
+      font-size: 12px;
+      font-weight: 700;
+      cursor: pointer;
+      white-space: nowrap;
+      transition: background 0.15s;
+    }
+    .btn-hdr:hover { background: var(--orange-mid); }
+
+    /* Nav tabs */
+    .nav-tabs {
+      display: flex;
+      overflow-x: auto;
+      scrollbar-width: none;
+    }
+    .nav-tabs::-webkit-scrollbar { display: none; }
+
+    .nav-tab {
+      padding: 10px 15px;
+      font-size: 12.5px;
+      font-weight: 500;
+      color: rgba(255,255,255,0.55);
+      cursor: pointer;
+      white-space: nowrap;
+      border-bottom: 2.5px solid transparent;
+      transition: all 0.18s;
+      user-select: none;
+      display: flex;
+      align-items: center;
+      gap: 5px;
+    }
+    .nav-tab:hover { color: rgba(255,255,255,0.88); }
+    .nav-tab.active { color: var(--orange); border-bottom-color: var(--orange); font-weight:600; }
+
+    .nb {
+      background: rgba(255,255,255,0.15);
+      color: rgba(255,255,255,0.75);
+      font-size: 10px;
+      padding: 1px 5px;
+      border-radius: 8px;
+      font-weight: 600;
+    }
+    .nav-tab.active .nb { background: rgba(191,87,0,0.3); color: var(--orange); }
+
+    /* ===========================
+       MAIN / LAYOUT
+    =========================== */
+    .main { padding: 14px; max-width: 1440px; margin: 0 auto; }
+
+    .view-section { display: none; }
+    .view-section.active { display: block; animation: fadeIn 0.2s ease; }
+    @keyframes fadeIn { from { opacity:0; transform:translateY(-5px); } to { opacity:1; transform:translateY(0); } }
+
+    /* ===========================
+       CARDS / COMMON
+    =========================== */
+    .card {
+      background: white;
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+    }
+
+    /* ===========================
+       DASHBOARD
+    =========================== */
+    .proj-banner {
+      background: white;
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+      padding: 14px 18px;
+      margin-bottom: 12px;
+      display: flex;
+      flex-wrap: wrap;
+      gap: 20px;
+      align-items: center;
+      border-left: 5px solid var(--blue);
+    }
+    .pb-item { display:flex; flex-direction:column; gap:1px; }
+    .pb-label { font-size:10px; font-weight:700; text-transform:uppercase; letter-spacing:0.07em; color:var(--gray-400); }
+    .pb-value { font-size:14px; font-weight:700; color:var(--gray-800); }
+
+    .stats-grid {
+      display: grid;
+      grid-template-columns: repeat(2,1fr);
+      gap: 10px;
+      margin-bottom: 12px;
+    }
+    @media(min-width:500px) { .stats-grid { grid-template-columns: repeat(3,1fr); } }
+    @media(min-width:900px) { .stats-grid { grid-template-columns: repeat(5,1fr); } }
+
+    .stat-card {
+      background: white;
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+      padding: 14px 16px;
+      border-left: 4px solid var(--gray-200);
+    }
+    .sc-total { border-left-color: var(--blue); }
+    .sc-open  { border-left-color: var(--danger); }
+    .sc-prog  { border-left-color: var(--info); }
+    .sc-done  { border-left-color: var(--success); }
+    .sc-hold  { border-left-color: var(--gray-400); }
+
+    .stat-num {
+      font-size: 32px;
+      font-weight: 900;
+      line-height: 1;
+      margin-bottom: 2px;
+    }
+    .sc-total .stat-num { color: var(--blue); }
+    .sc-open  .stat-num { color: var(--danger); }
+    .sc-prog  .stat-num { color: var(--info); }
+    .sc-done  .stat-num { color: var(--success); }
+    .sc-hold  .stat-num { color: var(--gray-400); }
+
+    .stat-lbl { font-size:11px; font-weight:700; text-transform:uppercase; letter-spacing:0.05em; color:var(--gray-400); }
+    .stat-sub { font-size:11px; color:var(--gray-300); margin-top:2px; }
+
+    .progress-card {
+      background: white;
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+      padding: 16px 18px;
+      margin-bottom: 12px;
+    }
+    .prog-top { display:flex; justify-content:space-between; align-items:baseline; margin-bottom:10px; }
+    .prog-heading { font-weight:700; font-size:13px; color:var(--gray-700); }
+    .prog-pct { font-size:24px; font-weight:900; color:var(--orange); }
+    .prog-track { height:14px; background:var(--gray-100); border-radius:7px; overflow:hidden; display:flex; margin-bottom:8px; }
+    .pf-done { height:100%; background:var(--orange); border-radius:7px 0 0 7px; transition:width 0.6s ease; }
+    .pf-prog { height:100%; background:var(--blue-mid); transition:width 0.6s ease; }
+    .prog-legend { display:flex; gap:16px; flex-wrap:wrap; }
+    .leg { display:flex; align-items:center; gap:5px; font-size:11px; color:var(--gray-400); }
+    .leg-dot { width:10px; height:10px; border-radius:2px; }
+
+    .room-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(230px, 1fr));
+      gap: 10px;
+    }
+    .room-card {
+      background: white;
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+      padding: 14px;
+      cursor: pointer;
+      transition: box-shadow 0.15s, transform 0.15s;
+    }
+    .room-card:hover { box-shadow:var(--shadow-md); transform:translateY(-2px); }
+    .rc-top { display:flex; justify-content:space-between; align-items:center; margin-bottom:8px; }
+    .rc-name { font-weight:700; font-size:13px; }
+    .rc-pct  { font-size:13px; font-weight:900; }
+    .rc-bar  { height:6px; background:var(--gray-100); border-radius:3px; overflow:hidden; margin-bottom:8px; }
+    .rc-fill { height:100%; border-radius:3px; transition:width 0.5s; }
+    .rc-chips { display:flex; gap:5px; flex-wrap:wrap; }
+    .chip { font-size:11px; padding:2px 7px; border-radius:10px; font-weight:500; }
+    .chip-t { background:var(--gray-100); color:var(--gray-500); }
+    .chip-d { background:#dcfce7; color:#15803d; }
+    .chip-p { background:#dbeafe; color:#1d4ed8; }
+    .chip-o { background:#fee2e2; color:#b91c1c; }
+
+    /* ===========================
+       FILTERS
+    =========================== */
+    .filters-card {
+      background: white;
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+      padding: 10px 12px;
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      align-items: center;
+      margin-bottom: 10px;
+    }
+    .fi, .fs {
+      border: 1.5px solid var(--gray-200);
+      border-radius: 6px;
+      padding: 7px 10px;
+      font-size: 12.5px;
+      color: var(--gray-700);
+      background: var(--gray-50);
+      outline: none;
+      transition: border-color 0.15s;
+    }
+    .fi:focus, .fs:focus { border-color: var(--blue-mid); }
+    .fi { flex:1; min-width:160px; }
+    .btn-clear {
+      padding:7px 12px; border-radius:6px; font-size:12px;
+      color:var(--gray-500); background:white;
+      border:1px solid var(--gray-200); cursor:pointer;
+    }
+    .btn-clear:hover { background:var(--gray-100); }
+
+    /* ===========================
+       BUTTONS
+    =========================== */
+    .btn {
+      padding: 8px 15px;
+      border-radius: 7px;
+      font-size: 12.5px;
+      font-weight: 600;
+      cursor: pointer;
+      border: none;
+      transition: all 0.15s;
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      line-height: 1;
+    }
+    .btn-primary   { background: var(--blue);   color: white; }
+    .btn-primary:hover { background: var(--blue-mid); }
+    .btn-orange    { background: var(--orange);  color: white; }
+    .btn-orange:hover { background: var(--orange-mid); }
+    .btn-secondary { background: white; color: var(--gray-700); border: 1px solid var(--gray-300); }
+    .btn-secondary:hover { background: var(--gray-100); }
+    .btn-danger    { background: var(--danger); color: white; }
+    .btn-danger:hover { opacity:.88; }
+    .btn-success   { background: var(--success); color: white; }
+    .btn-sm  { padding:6px 12px; font-size:12px; }
+    .btn-xs  { padding:4px 9px;  font-size:11px; }
+
+    /* ===========================
+       TABLE
+    =========================== */
+    .table-card { background:white; border-radius:var(--radius); box-shadow:var(--shadow); overflow:hidden; }
+    .tc-head {
+      padding: 12px 16px;
+      border-bottom: 1px solid var(--gray-100);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 8px;
+    }
+    .tc-title { font-weight:700; font-size:13px; color:var(--gray-700); }
+    .count-pill {
+      background: var(--blue-light);
+      color: var(--blue);
+      font-size:11px; font-weight:700;
+      padding:2px 9px; border-radius:10px;
+    }
+    .tbl-scroll { overflow-x:auto; }
+    table { width:100%; border-collapse:collapse; font-size:12.5px; }
+    thead th {
+      padding:9px 12px;
+      text-align:left;
+      font-size:10.5px; font-weight:700;
+      text-transform:uppercase; letter-spacing:0.06em;
+      color:var(--gray-400);
+      background:var(--gray-50);
+      border-bottom:1px solid var(--gray-200);
+      white-space:nowrap;
+    }
+    tbody tr { border-bottom:1px solid var(--gray-100); transition:background 0.1s; }
+    tbody tr:hover { background:#f8f9ff; }
+    tbody tr:last-child { border-bottom:none; }
+    tbody td { padding:10px 12px; vertical-align:middle; color:var(--gray-700); }
+    .td-num { color:var(--gray-300); font-size:11px; font-weight:700; width:32px; }
+
+    /* ===========================
+       BADGES
+    =========================== */
+    .badge {
+      display:inline-flex; align-items:center; gap:4px;
+      padding:3px 8px; border-radius:12px;
+      font-size:11px; font-weight:600; white-space:nowrap;
+    }
+    .b-open     { background:#fee2e2; color:#dc2626; }
+    .b-inprog   { background:#dbeafe; color:#2563eb; }
+    .b-complete { background:#dcfce7; color:#16a34a; }
+    .b-onhold   { background:#f3f4f6; color:#6b7280; }
+    .bdot { width:5px; height:5px; border-radius:50%; flex-shrink:0; }
+    .b-open .bdot     { background:#dc2626; }
+    .b-inprog .bdot   { background:#2563eb; }
+    .b-complete .bdot { background:#16a34a; }
+    .b-onhold .bdot   { background:#9ca3af; }
+
+    .pbadge { display:inline-block; padding:2px 7px; border-radius:4px; font-size:10.5px; font-weight:700; }
+    .p-low      { background:#f0fdf4; color:#15803d; }
+    .p-medium   { background:#fefce8; color:#a16207; }
+    .p-high     { background:#fff7ed; color:#c2410c; }
+    .p-critical { background:#fef2f2; color:#991b1b; }
+
+    /* Status select inline */
+    .status-sel {
+      border-radius:6px; padding:4px 7px;
+      font-size:11px; font-weight:600;
+      cursor:pointer; outline:none; border:1.5px solid;
+    }
+    .ss-open     { color:#dc2626; border-color:#fecaca; background:#fff; }
+    .ss-inprog   { color:#2563eb; border-color:#bfdbfe; background:#fff; }
+    .ss-complete { color:#16a34a; border-color:#bbf7d0; background:#fff; }
+    .ss-onhold   { color:#6b7280; border-color:#e5e7eb; background:#fff; }
+
+    /* Assignee tag */
+    .assignee-tag {
+      display:inline-flex; align-items:center; gap:5px;
+      font-size:12px; font-weight:600;
+      color: var(--blue-mid);
+    }
+    .assignee-tag.unassigned { color:var(--gray-400); font-weight:400; font-style:italic; }
+
+    /* EDIT BUTTON - prominent */
+    .btn-edit {
+      background: var(--blue-light);
+      color: var(--blue);
+      border: 1.5px solid #93c5fd;
+      border-radius: 6px;
+      padding: 5px 10px;
+      font-size: 12px;
+      font-weight: 700;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      transition: all 0.15s;
+      white-space: nowrap;
+    }
+    .btn-edit:hover { background:var(--blue); color:white; border-color:var(--blue); }
+
+    .btn-del-sm {
+      background: #fee2e2;
+      color: #dc2626;
+      border: 1.5px solid #fca5a5;
+      border-radius: 6px;
+      padding: 5px 8px;
+      font-size: 12px;
+      font-weight: 700;
+      cursor: pointer;
+      transition: all 0.15s;
+    }
+    .btn-del-sm:hover { background:#dc2626; color:white; border-color:#dc2626; }
+
+    .action-cell { display:flex; gap:5px; align-items:center; }
+
+    .cat-tag {
+      display:inline-block; background:var(--gray-100);
+      color:var(--gray-600); padding:2px 7px;
+      border-radius:4px; font-size:11.5px;
+    }
+
+    /* ===========================
+       GROUPED VIEW
+    =========================== */
+    .group-block { margin-bottom:14px; border-radius:var(--radius); overflow:hidden; box-shadow:var(--shadow); }
+    .group-head {
+      background: var(--blue);
+      color: white;
+      padding: 11px 16px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    .group-head-title { font-weight:700; font-size:13.5px; }
+    .group-head-r { display:flex; align-items:center; gap:12px; font-size:12px; }
+    .gcnt { background:rgba(255,255,255,0.2); padding:2px 8px; border-radius:10px; }
+    .mini-prog { display:flex; align-items:center; gap:7px; }
+    .mpt { width:72px; height:5px; background:rgba(255,255,255,0.25); border-radius:3px; overflow:hidden; }
+    .mpf { height:100%; background:var(--orange); border-radius:3px; }
+    .group-body { background:white; }
+
+    /* ===========================
+       MOBILE CARDS
+    =========================== */
+    .mobile-cards { display:none; }
+    @media(max-width:639px) {
+      .main { padding:8px; }
+      .mobile-cards  { display:block; }
+      .desktop-table { display:none !important; }
+
+      .mcard {
+        background:white; border-radius:var(--radius); box-shadow:var(--shadow);
+        padding:12px; margin-bottom:8px; border-left:4px solid;
+      }
+      .mc-open     { border-left-color: var(--danger); }
+      .mc-inprog   { border-left-color: var(--info); }
+      .mc-complete { border-left-color: var(--success); }
+      .mc-onhold   { border-left-color: var(--gray-400); }
+
+      .mcard-top  { display:flex; justify-content:space-between; gap:8px; margin-bottom:6px; align-items:flex-start; }
+      .mcard-desc { font-weight:600; font-size:13px; flex:1; line-height:1.35; }
+      .mcard-meta { display:flex; flex-wrap:wrap; gap:5px; margin-bottom:8px; }
+      .mtag       { background:var(--gray-100); color:var(--gray-600); font-size:11px; padding:2px 7px; border-radius:4px; }
+      .mcard-foot { display:flex; justify-content:space-between; align-items:center; }
+    }
+
+    /* ===========================
+       FAB
+    =========================== */
+    .fab {
+      position:fixed; bottom:22px; right:22px;
+      width:54px; height:54px; border-radius:50%;
+      background:var(--orange); color:white;
+      border:none; font-size:26px; font-weight:700;
+      cursor:pointer;
+      box-shadow:0 4px 18px rgba(191,87,0,0.45);
+      display:flex; align-items:center; justify-content:center;
+      z-index:90; transition:all 0.2s;
+    }
+    .fab:hover { transform:scale(1.1); box-shadow:0 6px 24px rgba(191,87,0,0.55); }
+
+    /* ===========================
+       MODAL BASE
+    =========================== */
+    .modal-bg {
+      position:fixed; inset:0;
+      background:rgba(0,0,0,0.5); z-index:200;
+      display:flex; align-items:flex-end; justify-content:center;
+      opacity:0; pointer-events:none; transition:opacity 0.22s;
+    }
+    @media(min-width:640px) { .modal-bg { align-items:center; padding:20px; } }
+    .modal-bg.open { opacity:1; pointer-events:all; }
+
+    .modal-box {
+      background:white; width:100%;
+      max-height:93vh; overflow-y:auto;
+      border-radius:16px 16px 0 0;
+      transform:translateY(100%);
+      transition:transform 0.28s cubic-bezier(0.34,1.56,0.64,1);
+    }
+    @media(min-width:640px) {
+      .modal-box { border-radius:12px; max-width:580px; max-height:90vh; transform:translateY(20px) scale(0.97); }
+    }
+    .modal-bg.open .modal-box { transform:translateY(0) scale(1); }
+
+    .modal-head {
+      padding:16px 20px; border-bottom:1px solid var(--gray-200);
+      display:flex; justify-content:space-between; align-items:center;
+      position:sticky; top:0; background:white; z-index:1;
+    }
+    .modal-title { font-weight:800; font-size:15px; color:var(--gray-800); }
+    .modal-close {
+      background:var(--gray-100); border:none;
+      width:28px; height:28px; border-radius:50%;
+      font-size:15px; cursor:pointer;
+      display:flex; align-items:center; justify-content:center;
+      color:var(--gray-500);
+    }
+    .modal-body { padding:18px 20px; }
+    .modal-foot {
+      padding:13px 20px; border-top:1px solid var(--gray-100);
+      display:flex; gap:8px; justify-content:flex-end;
+      position:sticky; bottom:0; background:white;
+    }
+
+    /* ===========================
+       FORM ELEMENTS
+    =========================== */
+    .form-grid { display:grid; gap:13px; }
+    .form-row  { display:grid; grid-template-columns:1fr 1fr; gap:11px; }
+    .form-group { display:flex; flex-direction:column; gap:4px; }
+    .flabel {
+      font-size:10.5px; font-weight:700;
+      text-transform:uppercase; letter-spacing:0.06em;
+      color:var(--gray-500);
+    }
+    .flabel .req { color:var(--danger); }
+
+    .finput {
+      border:1.5px solid var(--gray-200);
+      border-radius:7px; padding:8px 10px;
+      font-size:13px; color:var(--gray-800);
+      outline:none; transition:border-color 0.15s; width:100%;
+      background:white;
+    }
+    .finput:focus { border-color:var(--blue-mid); box-shadow:0 0 0 3px rgba(26,79,168,0.1); }
+    textarea.finput { resize:vertical; min-height:70px; font-family:inherit; }
+
+    /* Input with mic button */
+    .input-with-mic { display:flex; gap:6px; align-items:flex-start; }
+    .input-with-mic .finput { flex:1; }
+
+    .mic-btn {
+      background: var(--gray-100);
+      border: 1.5px solid var(--gray-200);
+      border-radius: 7px;
+      padding: 8px 9px;
+      font-size: 16px;
+      cursor: pointer;
+      flex-shrink: 0;
+      transition: all 0.15s;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      line-height: 1;
+    }
+    .mic-btn:hover { background: var(--blue-light); border-color: var(--blue-mid); }
+    .mic-btn.recording {
+      background: #fee2e2; border-color: #fca5a5;
+      animation: pulse-red 0.8s infinite alternate;
+    }
+    @keyframes pulse-red {
+      from { box-shadow: 0 0 0 0 rgba(220,38,38,0.4); }
+      to   { box-shadow: 0 0 0 6px rgba(220,38,38,0); }
+    }
+
+    /* Input with manage button */
+    .input-with-manage { display:flex; gap:6px; align-items:center; }
+    .input-with-manage select.finput { flex:1; }
+
+    .btn-manage {
+      background: var(--orange-light);
+      border: 1.5px solid #fdba74;
+      border-radius: 7px;
+      padding: 8px 9px;
+      font-size: 14px;
+      cursor: pointer;
+      flex-shrink: 0;
+      color: var(--orange);
+      font-weight: 700;
+      transition: all 0.15s;
+    }
+    .btn-manage:hover { background:var(--orange); color:white; border-color:var(--orange); }
+
+    /* Manage panel (inline expandable) */
+    .manage-panel {
+      border: 1.5px solid var(--gray-200);
+      border-radius: 8px;
+      padding: 10px;
+      background: var(--gray-50);
+      margin-top: 4px;
+      display: none;
+    }
+    .manage-panel.open { display: block; }
+    .manage-panel-title {
+      font-size: 11px; font-weight: 700; text-transform: uppercase;
+      letter-spacing: 0.06em; color: var(--gray-500); margin-bottom:8px;
+    }
+    .manage-list-items { display:flex; flex-direction:column; gap:4px; max-height:120px; overflow-y:auto; margin-bottom:8px; }
+    .manage-item {
+      display: flex; justify-content: space-between; align-items: center;
+      background: white; border: 1px solid var(--gray-200);
+      border-radius: 5px; padding: 5px 8px; font-size:12.5px;
+    }
+    .manage-item-del {
+      background:none; border:none; cursor:pointer;
+      color:var(--gray-400); font-size:14px; padding:0 2px;
+      transition:color 0.12s; line-height:1;
+    }
+    .manage-item-del:hover { color:var(--danger); }
+    .manage-add-row { display:flex; gap:6px; }
+    .manage-add-input {
+      flex:1; border:1.5px solid var(--gray-300); border-radius:6px;
+      padding:6px 8px; font-size:12.5px; outline:none;
+    }
+    .manage-add-input:focus { border-color:var(--blue-mid); }
+    .manage-add-btn {
+      background:var(--blue); color:white; border:none;
+      border-radius:6px; padding:6px 12px; font-size:12px;
+      font-weight:700; cursor:pointer;
+    }
+    .manage-add-btn:hover { background:var(--blue-mid); }
+
+    /* ===========================
+       SETTINGS MODAL (wide)
+    =========================== */
+    .settings-modal .modal-box { max-width:640px; }
+
+    /* ===========================
+       DELETE CONFIRM
+    =========================== */
+    .del-overlay {
+      position:fixed; inset:0; background:rgba(0,0,0,0.5);
+      z-index:400; display:flex; align-items:center; justify-content:center; padding:20px;
+    }
+    .del-box {
+      background:white; border-radius:14px; padding:28px 24px;
+      max-width:320px; width:100%; text-align:center; box-shadow:var(--shadow-lg);
+    }
+    .del-icon { font-size:36px; margin-bottom:10px; }
+    .del-title { font-weight:800; font-size:16px; margin-bottom:6px; }
+    .del-sub   { font-size:12.5px; color:var(--gray-400); margin-bottom:20px; }
+    .del-btns  { display:flex; gap:10px; justify-content:center; }
+
+    /* ===========================
+       TOAST
+    =========================== */
+    .toast {
+      position:fixed; bottom:86px; left:50%;
+      transform:translateX(-50%) translateY(80px);
+      background:var(--gray-800); color:white;
+      padding:10px 18px; border-radius:20px;
+      font-size:13px; font-weight:500; z-index:500;
+      opacity:0; transition:all 0.28s; pointer-events:none;
+      white-space:nowrap; box-shadow:var(--shadow-md);
+    }
+    .toast.show { transform:translateX(-50%) translateY(0); opacity:1; }
+
+    /* ===========================
+       TOOLBAR
+    =========================== */
+    .toolbar {
+      display:flex; gap:8px; flex-wrap:wrap;
+      align-items:center; margin-bottom:10px;
+    }
+
+    /* ===========================
+       EMPTY STATE
+    =========================== */
+    .empty {
+      text-align:center; padding:44px 16px; color:var(--gray-400);
+    }
+    .empty-icon  { font-size:38px; margin-bottom:8px; }
+    .empty-title { font-weight:700; font-size:14px; color:var(--gray-500); }
+    .empty-sub   { font-size:12px; margin-top:4px; }
+
+    /* ===========================
+       PRINT
+    =========================== */
+    @media print {
+      .app-header,.fab,.filters-card,.toolbar,.action-cell,.modal-bg,.toast { display:none !important; }
+      .main { padding:0; }
+      body  { background:white; }
+      .table-card { box-shadow:none; border:1px solid #ddd; }
+      #view-all { display:block !important; }
+      .view-section { display:none; }
+    }
+
+    /* Misc */
+    .text-muted { color:var(--gray-400); font-size:11.5px; }
+    .fw7 { font-weight:700; }
+    .section-gap { margin-bottom:12px; }
+  </style>
+</head>
+<body>
+
+<!-- ===================== HEADER ===================== -->
+<header class="app-header">
+  <div class="header-top">
+    <a class="header-logo" href="#">
+      <img class="logo-img" src="ACEtech-logo.png"
+           onerror="this.style.display='none';document.getElementById('logoFb').style.display='flex';"
+           alt="ACEtech Logo">
+      <div class="logo-fallback" id="logoFb">AC</div>
+      <div class="logo-text">
+        <span class="logo-name">ACEtech</span>
+        <span class="logo-sub">Punch List Manager</span>
+      </div>
+    </a>
+
+    <div class="header-project">
+      <select class="proj-select" id="projectSelect" onchange="switchProject(this.value)"></select>
+    </div>
+
+    <button class="btn-hdr" onclick="showNewProjectModal()">＋ New Project</button>
+  </div>
+
+  <nav class="nav-tabs">
+    <div class="nav-tab active" data-view="dashboard"   onclick="switchView('dashboard')">📊 Dashboard</div>
+    <div class="nav-tab"        data-view="all"         onclick="switchView('all')">☰ All Items <span class="nb" id="nbAll">0</span></div>
+    <div class="nav-tab"        data-view="byroom"      onclick="switchView('byroom')">🏠 By Room</div>
+    <div class="nav-tab"        data-view="byteam"      onclick="switchView('byteam')">👷 By Team</div>
+    <div class="nav-tab"        data-view="bycategory"  onclick="switchView('bycategory')">🏷 By Category</div>
+    <div class="nav-tab"        data-view="bystatus"    onclick="switchView('bystatus')">📋 By Status</div>
+  </nav>
+</header>
+
+<main class="main">
+
+  <!-- ======== DASHBOARD ======== -->
+  <div class="view-section active" id="view-dashboard">
+    <div id="projBanner" class="proj-banner"></div>
+    <div class="stats-grid" id="statsGrid"></div>
+    <div class="progress-card">
+      <div class="prog-top">
+        <span class="prog-heading">Overall Completion Progress</span>
+        <span class="prog-pct" id="progPct">0%</span>
+      </div>
+      <div class="prog-track" id="progTrack"></div>
+      <div class="prog-legend">
+        <div class="leg"><div class="leg-dot" style="background:var(--orange)"></div>Complete</div>
+        <div class="leg"><div class="leg-dot" style="background:var(--blue-mid)"></div>In Progress</div>
+        <div class="leg"><div class="leg-dot" style="background:var(--gray-200)"></div>Remaining</div>
+      </div>
+    </div>
+    <div class="room-grid" id="dashRooms"></div>
+  </div>
+
+  <!-- ======== ALL ITEMS ======== -->
+  <div class="view-section" id="view-all">
+    <div class="toolbar">
+      <button class="btn btn-secondary btn-sm" onclick="exportCSV()">⬇ Export CSV</button>
+      <button class="btn btn-secondary btn-sm" onclick="window.print()">🖨 Print</button>
+      <button class="btn btn-orange btn-sm"    onclick="openAddModal()">＋ Add Item</button>
+    </div>
+    <div class="filters-card">
+      <input class="fi" type="text" id="fSearch" placeholder="🔍 Search descriptions, rooms, categories…" oninput="renderTable()">
+      <select class="fs" id="fRoomFilter"     onchange="renderTable()"><option value="">All Rooms</option></select>
+      <select class="fs" id="fCatFilter"      onchange="renderTable()"><option value="">All Categories</option></select>
+      <select class="fs" id="fStatusFilter"   onchange="renderTable()">
+        <option value="">All Statuses</option>
+        <option value="Open">Open</option>
+        <option value="In Progress">In Progress</option>
+        <option value="Complete">Complete</option>
+        <option value="On Hold">On Hold</option>
+      </select>
+      <select class="fs" id="fAssigneeFilter" onchange="renderTable()"><option value="">All Assignees</option></select>
+      <button class="btn-clear" onclick="clearFilters()">✕ Clear</button>
+    </div>
+    <div class="mobile-cards"  id="mobileCards"></div>
+    <div class="table-card desktop-table">
+      <div class="tc-head">
+        <div style="display:flex;align-items:center;gap:8px;">
+          <span class="tc-title">Punch List Items</span>
+          <span class="count-pill" id="tblCount">0 items</span>
+        </div>
+      </div>
+      <div class="tbl-scroll">
+        <table>
+          <thead>
+            <tr>
+              <th>#</th>
+              <th>Category</th>
+              <th>Room / Location</th>
+              <th>Issue Description</th>
+              <th>Assigned To</th>
+              <th>Priority</th>
+              <th>Status</th>
+              <th>Due Date</th>
+              <th>Comment</th>
+              <th style="min-width:120px;">Actions</th>
+            </tr>
+          </thead>
+          <tbody id="tblBody"></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <!-- ======== BY ROOM ======== -->
+  <div class="view-section" id="view-byroom">
+    <div class="toolbar">
+      <button class="btn btn-orange btn-sm" onclick="openAddModal()">＋ Add Item</button>
+    </div>
+    <div id="roomGroups"></div>
+  </div>
+
+  <!-- ======== BY TEAM ======== -->
+  <div class="view-section" id="view-byteam">
+    <div class="toolbar">
+      <button class="btn btn-orange btn-sm" onclick="openAddModal()">＋ Add Item</button>
+    </div>
+    <div id="teamGroups"></div>
+  </div>
+
+  <!-- ======== BY CATEGORY ======== -->
+  <div class="view-section" id="view-bycategory">
+    <div class="toolbar">
+      <button class="btn btn-orange btn-sm" onclick="openAddModal()">＋ Add Item</button>
+    </div>
+    <div id="catGroups"></div>
+  </div>
+
+  <!-- ======== BY STATUS ======== -->
+  <div class="view-section" id="view-bystatus">
+    <div id="statusGroups"></div>
+  </div>
+
+</main>
+
+<!-- FAB -->
+<button class="fab" onclick="openAddModal()" title="Add item">＋</button>
+
+<!-- ===================== ITEM MODAL ===================== -->
+<div class="modal-bg" id="itemModalBg">
+  <div class="modal-box">
+    <div class="modal-head">
+      <span class="modal-title" id="modalTitle">Add Punch List Item</span>
+      <button class="modal-close" onclick="closeModal()">✕</button>
+    </div>
+    <div class="modal-body">
+      <div class="form-grid">
+
+        <!-- Description + Mic -->
+        <div class="form-group">
+          <label class="flabel">Issue Description <span class="req">*</span></label>
+          <div class="input-with-mic">
+            <textarea class="finput" id="mfDesc" rows="3" placeholder="Describe the work to be done…"></textarea>
+            <button type="button" class="mic-btn" id="micDesc" onclick="startDictation('mfDesc','micDesc')" title="Tap to dictate">🎤</button>
+          </div>
+          <div id="micDescStatus" style="font-size:11px;color:var(--orange);min-height:14px;"></div>
+        </div>
+
+        <!-- Category + Room -->
+        <div class="form-row">
+          <div class="form-group">
+            <label class="flabel">Category</label>
+            <select class="finput" id="mfCat"></select>
+          </div>
+          <div class="form-group">
+            <label class="flabel">Room / Location</label>
+            <div class="input-with-manage">
+              <select class="finput" id="mfRoom"></select>
+              <button type="button" class="btn-manage" onclick="toggleManage('manageRooms')" title="Manage rooms">⚙</button>
+            </div>
+            <!-- Manage Rooms Panel -->
+            <div class="manage-panel" id="manageRooms">
+              <div class="manage-panel-title">Manage Rooms</div>
+              <div class="manage-list-items" id="roomItemsList"></div>
+              <div class="manage-add-row">
+                <input class="manage-add-input" type="text" id="addRoomInput" placeholder="New room name…">
+                <button class="manage-add-btn" onclick="addListEntry('rooms','addRoomInput','mfRoom')">Add</button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Assignee + Priority -->
+        <div class="form-row">
+          <div class="form-group">
+            <label class="flabel">Assigned To</label>
+            <div class="input-with-manage">
+              <select class="finput" id="mfAssignee"></select>
+              <button type="button" class="btn-manage" onclick="toggleManage('manageTeam')" title="Manage team">⚙</button>
+            </div>
+            <!-- Manage Team Panel -->
+            <div class="manage-panel" id="manageTeam">
+              <div class="manage-panel-title">Manage Team Members</div>
+              <div class="manage-list-items" id="teamItemsList"></div>
+              <div class="manage-add-row">
+                <input class="manage-add-input" type="text" id="addTeamInput" placeholder="New team member…">
+                <button class="manage-add-btn" onclick="addListEntry('teams','addTeamInput','mfAssignee')">Add</button>
+              </div>
+            </div>
+          </div>
+          <div class="form-group">
+            <label class="flabel">Priority</label>
+            <select class="finput" id="mfPriority">
+              <option value="Low">Low</option>
+              <option value="Medium" selected>Medium</option>
+              <option value="High">High</option>
+              <option value="Critical">Critical</option>
+            </select>
+          </div>
+        </div>
+
+        <!-- Status + Due Date -->
+        <div class="form-row">
+          <div class="form-group">
+            <label class="flabel">Status</label>
+            <select class="finput" id="mfStatus">
+              <option value="Open" selected>Open</option>
+              <option value="In Progress">In Progress</option>
+              <option value="Complete">Complete</option>
+              <option value="On Hold">On Hold</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label class="flabel">Due Date</label>
+            <input class="finput" type="date" id="mfDue">
+          </div>
+        </div>
+
+        <!-- Date Completed -->
+        <div class="form-group">
+          <label class="flabel">Date Completed</label>
+          <input class="finput" type="date" id="mfCompleted">
+        </div>
+
+        <!-- Comment + Mic -->
+        <div class="form-group">
+          <label class="flabel">Comment / Notes</label>
+          <div class="input-with-mic">
+            <textarea class="finput" id="mfComment" rows="2" placeholder="Any additional notes…"></textarea>
+            <button type="button" class="mic-btn" id="micComment" onclick="startDictation('mfComment','micComment')" title="Tap to dictate">🎤</button>
+          </div>
+          <div id="micCommentStatus" style="font-size:11px;color:var(--orange);min-height:14px;"></div>
+        </div>
+
+      </div>
+    </div>
+    <div class="modal-foot">
+      <button class="btn btn-secondary" onclick="closeModal()">Cancel</button>
+      <button class="btn btn-primary"   onclick="saveItem()">💾 Save Item</button>
+    </div>
+  </div>
+</div>
+
+<!-- ===================== NEW PROJECT MODAL ===================== -->
+<div class="modal-bg" id="projModalBg">
+  <div class="modal-box">
+    <div class="modal-head">
+      <span class="modal-title">Create New Project</span>
+      <button class="modal-close" onclick="closeProjModal()">✕</button>
+    </div>
+    <div class="modal-body">
+      <div class="form-grid">
+        <div class="form-group">
+          <label class="flabel">Project Name <span class="req">*</span></label>
+          <input class="finput" type="text" id="npName" placeholder="e.g. Smith Residence">
+        </div>
+        <div class="form-group">
+          <label class="flabel">Project Address</label>
+          <input class="finput" type="text" id="npAddr" placeholder="e.g. 123 Main Street">
+        </div>
+        <div class="form-row">
+          <div class="form-group">
+            <label class="flabel">Project Manager</label>
+            <input class="finput" type="text" id="npMgr" placeholder="Supervisor name">
+          </div>
+          <div class="form-group">
+            <label class="flabel">Start Date</label>
+            <input class="finput" type="date" id="npDate">
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="modal-foot">
+      <button class="btn btn-secondary" onclick="closeProjModal()">Cancel</button>
+      <button class="btn btn-primary"   onclick="createProject()">Create Project</button>
+    </div>
+  </div>
+</div>
+
+<!-- ===================== DELETE CONFIRM ===================== -->
+<div class="del-overlay" id="delOverlay" style="display:none;">
+  <div class="del-box">
+    <div class="del-icon">🗑️</div>
+    <div class="del-title">Delete this item?</div>
+    <div class="del-sub">This action cannot be undone.</div>
+    <div class="del-btns">
+      <button class="btn btn-secondary" onclick="cancelDel()">Cancel</button>
+      <button class="btn btn-danger"    onclick="confirmDel()">Yes, Delete</button>
+    </div>
+  </div>
+</div>
+
+<!-- TOAST -->
+<div class="toast" id="toast"></div>
+
+<script>
+// ============================================================
+//  SEED DATA
+// ============================================================
+const DEF_TEAMS = ['Safras','Owen','Popeye','Mervin','Acetech','Kim','Optimum Cooling'];
+const DEF_ROOMS = ['Living Room','Main Entry','Master Bedroom','Guest Bedroom','Pump Room','Pool Deck','Pool','Powder Room','Master Bathroom','Guest Bathroom','Outdoor work','Outdoor Shower','Outdoor Kitchen','Laundry Room','Kitchen','Garage','Office','Balcony','House','basement'];
+const DEF_CATS  = ['Appliances','AV and Networking','Backfill','Bath Accessories','Build','Building Permits','Cabinets','Carpet','Ceiling','Cladding','Closet Shelving','Completion','Countertops','Demolition','Door Hardware','Doors - Exterior','Doors - Interior','Driveway','Drywall','Electrical','Fireplaces','Floor Tile','Flooring','Framing','Furniture','Garage Doors','Gas Piping','Grading & Excavation','Gutters','Hardscapes','Hardwood Flooring','Heating & Air','Insulation','Installation','Landscaping','Painting - Exterior','Painting - Interior','Plumbing','Polishing','Roofing','Screens','Security Systems','Shower Doors','Siding & Cornice','Slick walls','Smoke Alarms','Specialty Trim','Stair Railings','Tiling','Vanities'];
+
+const LAWRENCE_ITEMS = [
+  {cat:'Electrical',room:'Garage',desc:'Electrical fixture installation',assignee:'',status:'Open',priority:'Medium',due:'',completed:'',comment:''},
+  {cat:'Drywall',room:'Garage',desc:'Installation of drywall and painting of ceiling',assignee:'',status:'Open',priority:'Medium',due:'',completed:'',comment:''},
+  {cat:'Painting - Interior',room:'Main Entry',desc:'Painting of walls and ceiling',assignee:'',status:'Open',priority:'Medium',due:'',completed:'',comment:''},
+  {cat:'Drywall',room:'Main Entry',desc:'Installation of insulation and drywall for ceiling',assignee:'',status:'Open',priority:'Medium',due:'',completed:'',comment:''},
+  {cat:'Painting - Interior',room:'Guest Bedroom',desc:'Painting of walls and ceiling',assignee:'',status:'Open',priority:'Medium',due:'',completed:'',comment:''},
+  {cat:'Ceiling',room:'Guest Bedroom',desc:'Installation of insulation and drywall for ceiling',assignee:'',status:'Open',priority:'Medium',due:'',completed:'',comment:''},
+  {cat:'Electrical',room:'Guest Bedroom',desc:'Electrical fixture installation',assignee:'',status:'Open',priority:'Medium',due:'',completed:'',comment:''},
+  {cat:'Ceiling',room:'Laundry Room',desc:'Painting of walls and ceiling',assignee:'',status:'Open',priority:'Medium',due:'',completed:'',comment:''},
+  {cat:'Ceiling',room:'Laundry Room',desc:'Installation of insulation and drywall for ceiling',assignee:'',status:'Open',priority:'Medium',due:'',completed:'',comment:''},
+  {cat:'Plumbing',room:'Laundry Room',desc:'Plumbing fixtures installation',assignee:'',status:'Open',priority:'Medium',due:'',completed:'',comment:''},
+  {cat:'Electrical',room:'Laundry Room',desc:'Electrical fixtures installation',assignee:'',status:'Open',priority:'Medium',due:'',completed:'',comment:''},
+  {cat:'Painting - Interior',room:'Guest Bathroom',desc:'Painting of walls and ceiling',assignee:'',status:'Open',priority:'Medium',due:'',completed:'',comment:''},
+  {cat:'Insulation',room:'Guest Bathroom',desc:'Installation of insulation and drywall for ceiling',assignee:'',status:'Open',priority:'Medium',due:'',completed:'',comment:''},
+  {cat:'Electrical',room:'Guest Bathroom',desc:'Electrical fixtures installation',assignee:'',status:'Open',priority:'Medium',due:'',completed:'',comment:''},
+  {cat:'Plumbing',room:'Guest Bathroom',desc:'Plumbing fixtures installation',assignee:'',status:'Open',priority:'Medium',due:'',completed:'',comment:''},
+  {cat:'Build',room:'Guest Bathroom',desc:'Building of false wall',assignee:'',status:'Open',priority:'Medium',due:'',completed:'',comment:''},
+  {cat:'Tiling',room:'Guest Bathroom',desc:'Tiling of shower walls',assignee:'',status:'Open',priority:'Medium',due:'',completed:'',comment:''},
+  {cat:'Electrical',room:'Guest Bathroom',desc:'Installation of skylights and extractor',assignee:'',status:'Open',priority:'Medium',due:'',completed:'',comment:''},
+  {cat:'Vanities',room:'Guest Bathroom',desc:'Installation of vanity',assignee:'',status:'Open',priority:'Medium',due:'',completed:'',comment:''},
+  {cat:'Shower Doors',room:'Guest Bathroom',desc:'Installation of shower door',assignee:'',status:'Open',priority:'Medium',due:'',completed:'',comment:''},
+  {cat:'Painting - Interior',room:'Office',desc:'Painting of walls',assignee:'',status:'Open',priority:'Medium',due:'',completed:'',comment:''},
+  {cat:'Insulation',room:'Office',desc:'Installation of insulation and drywall for ceiling',assignee:'',status:'Open',priority:'Medium',due:'',completed:'',comment:''},
+  {cat:'Ceiling',room:'Office',desc:'Painting of ceiling',assignee:'',status:'Open',priority:'Medium',due:'',completed:'',comment:''},
+  {cat:'Electrical',room:'Office',desc:'Electrical fixtures installation',assignee:'',status:'Open',priority:'Medium',due:'',completed:'',comment:''},
+  {cat:'Furniture',room:'Office',desc:'Installation of furniture',assignee:'',status:'Open',priority:'Low',due:'',completed:'',comment:''},
+  {cat:'Painting - Interior',room:'Master Bathroom',desc:'Painting of walls',assignee:'',status:'Open',priority:'Medium',due:'',completed:'',comment:''},
+  {cat:'Electrical',room:'Master Bathroom',desc:'Electrical fixtures installation',assignee:'',status:'Open',priority:'Medium',due:'',completed:'',comment:''},
+  {cat:'Plumbing',room:'Master Bathroom',desc:'Plumbing fixtures installation',assignee:'',status:'Open',priority:'Medium',due:'',completed:'',comment:''},
+  {cat:'Tiling',room:'Master Bathroom',desc:'Tiling of walls and shower',assignee:'',status:'Open',priority:'High',due:'',completed:'',comment:''},
+  {cat:'Installation',room:'Master Bathroom',desc:'Installation of shower glass',assignee:'',status:'Open',priority:'High',due:'',completed:'',comment:''},
+  {cat:'Vanities',room:'Master Bathroom',desc:'Installation of vanity',assignee:'',status:'Open',priority:'Medium',due:'',completed:'',comment:''},
+  {cat:'Installation',room:'Master Bathroom',desc:'Installation of extractor fan',assignee:'',status:'Open',priority:'Medium',due:'',completed:'',comment:''},
+  {cat:'Build',room:'Master Bathroom',desc:'Build cladding over door header',assignee:'',status:'Open',priority:'Medium',due:'',completed:'',comment:''},
+  {cat:'Painting - Interior',room:'Master Bedroom',desc:'Painting of walls',assignee:'',status:'Open',priority:'Medium',due:'',completed:'',comment:''},
+  {cat:'Electrical',room:'Master Bedroom',desc:'Electrical fixtures installation',assignee:'',status:'Open',priority:'Medium',due:'',completed:'',comment:''},
+  {cat:'Build',room:'Master Bedroom',desc:'Build cladding over door header',assignee:'',status:'Open',priority:'Medium',due:'',completed:'',comment:''},
+  {cat:'Installation',room:'Master Bedroom',desc:'Installation of wall cladding and furniture',assignee:'',status:'Open',priority:'Medium',due:'',completed:'',comment:''},
+  {cat:'Painting - Interior',room:'Living Room',desc:'Painting of walls',assignee:'',status:'Open',priority:'Medium',due:'',completed:'',comment:''},
+  {cat:'Electrical',room:'Living Room',desc:'Electrical fixtures installation',assignee:'',status:'Open',priority:'Medium',due:'',completed:'',comment:''},
+  {cat:'Plumbing',room:'Living Room',desc:'Plumbing fixtures installation',assignee:'',status:'Open',priority:'Medium',due:'',completed:'',comment:''},
+  {cat:'Installation',room:'Living Room',desc:'Installation of wall cladding, furniture and cupboards',assignee:'',status:'Open',priority:'Medium',due:'',completed:'',comment:''},
+  {cat:'Build',room:'Living Room',desc:'Build cladding over door header',assignee:'',status:'Open',priority:'Medium',due:'',completed:'',comment:''},
+  {cat:'Plumbing',room:'Balcony',desc:'Installation of plumbing fixtures',assignee:'',status:'Open',priority:'Medium',due:'',completed:'',comment:''},
+  {cat:'Electrical',room:'Balcony',desc:'Installation of electrical fixtures',assignee:'',status:'Open',priority:'Medium',due:'',completed:'',comment:''},
+  {cat:'Stair Railings',room:'Balcony',desc:'Installation of railing',assignee:'',status:'Open',priority:'High',due:'',completed:'',comment:''},
+  {cat:'Installation',room:'Outdoor Kitchen',desc:'Installation of outdoor kitchen',assignee:'',status:'Open',priority:'High',due:'',completed:'',comment:''},
+  {cat:'Installation',room:'Balcony',desc:'Installation of bar',assignee:'',status:'Open',priority:'Medium',due:'',completed:'',comment:''},
+  {cat:'Build',room:'Balcony',desc:'Building of planter',assignee:'',status:'Open',priority:'Low',due:'',completed:'',comment:''},
+  {cat:'Painting - Exterior',room:'Pool Deck',desc:'Painting of walls',assignee:'',status:'Open',priority:'Medium',due:'',completed:'',comment:''},
+  {cat:'Build',room:'Pool Deck',desc:'Building of wood slat screen',assignee:'',status:'Open',priority:'Medium',due:'',completed:'',comment:''},
+  {cat:'Installation',room:'Pool Deck',desc:'Installation of pool drain',assignee:'',status:'Open',priority:'High',due:'',completed:'',comment:''},
+  {cat:'Plumbing',room:'Pool Deck',desc:'Installation of plumbing fixtures',assignee:'',status:'Open',priority:'Medium',due:'',completed:'',comment:''},
+  {cat:'Electrical',room:'Pool Deck',desc:'Installation of electrical fixtures',assignee:'',status:'Open',priority:'Medium',due:'',completed:'',comment:''},
+  {cat:'Completion',room:'Pool',desc:'Completion of pool and Jacuzzi',assignee:'',status:'Open',priority:'High',due:'',completed:'',comment:''},
+  {cat:'Security Systems',room:'House',desc:'Complete all circuits back to the control panel',assignee:'',status:'Open',priority:'High',due:'',completed:'',comment:''},
+  {cat:'Flooring',room:'House',desc:'Complete floor polishing',assignee:'',status:'Open',priority:'Medium',due:'',completed:'',comment:''},
+  {cat:'Doors - Interior',room:'House',desc:'Installation of interior doors',assignee:'',status:'Open',priority:'Medium',due:'',completed:'',comment:''},
+  {cat:'Heating & Air',room:'House',desc:'Installation of AC units',assignee:'',status:'Open',priority:'High',due:'',completed:'',comment:''},
+  {cat:'Slick walls',room:'House',desc:'Masonry repairs',assignee:'',status:'Open',priority:'Medium',due:'',completed:'',comment:''},
+  {cat:'Painting - Exterior',room:'House',desc:'Exterior painting',assignee:'',status:'Open',priority:'Medium',due:'',completed:'',comment:''},
+  {cat:'Doors - Exterior',room:'House',desc:'Installation of exterior doors',assignee:'',status:'Open',priority:'Medium',due:'',completed:'',comment:''},
+  {cat:'Cladding',room:'basement',desc:'Cladding of basement walls',assignee:'',status:'Open',priority:'Medium',due:'',completed:'',comment:''},
+  {cat:'Polishing',room:'Outdoor work',desc:'Polishing of pavers',assignee:'',status:'Open',priority:'Low',due:'',completed:'',comment:''},
+  {cat:'Build',room:'Outdoor work',desc:'Drainage at entry',assignee:'',status:'Open',priority:'High',due:'',completed:'',comment:''},
+  {cat:'Build',room:'Outdoor work',desc:'Building of wall with house number',assignee:'',status:'Open',priority:'Low',due:'',completed:'',comment:''},
+  {cat:'Build',room:'Outdoor work',desc:'Column for electrical meter',assignee:'',status:'Open',priority:'Medium',due:'',completed:'',comment:''},
+  {cat:'Cladding',room:'Outdoor work',desc:'Cladding for water tank platform',assignee:'',status:'Open',priority:'Medium',due:'',completed:'',comment:''},
+  {cat:'Build',room:'Outdoor work',desc:'Masonry repairs',assignee:'',status:'Open',priority:'Medium',due:'',completed:'',comment:''},
+];
+
+// ============================================================
+//  STATE
+// ============================================================
+let ST = { currentProject: null, projects: {}, editId: null, delId: null, view: 'dashboard' };
+
+const uid  = () => Date.now().toString(36) + Math.random().toString(36).substr(2,5);
+const save = () => localStorage.setItem('acetech_pl_v3', JSON.stringify(ST));
+
+function load() {
+  try {
+    const raw = localStorage.getItem('acetech_pl_v3');
+    if (raw) ST = JSON.parse(raw);
+  } catch(e) {}
+
+  if (!ST.projects || Object.keys(ST.projects).length === 0) {
+    const pid = uid();
+    ST.projects = {};
+    ST.projects[pid] = {
+      id: pid, name: 'Lawrence Residence',
+      address: 'Morne Beausejour', manager: 'ACEtech', date: '2025-12-08',
+      teams: [...DEF_TEAMS], rooms: [...DEF_ROOMS], cats: [...DEF_CATS],
+      items: LAWRENCE_ITEMS.map(i => ({...i, id: uid()}))
+    };
+    ST.currentProject = pid;
+    save();
+  }
+  if (!ST.currentProject || !ST.projects[ST.currentProject]) {
+    ST.currentProject = Object.keys(ST.projects)[0];
+  }
+}
+
+const proj = () => ST.projects[ST.currentProject];
+
+function filteredItems() {
+  const p = proj(); if (!p) return [];
+  const q  = (document.getElementById('fSearch')?.value || '').toLowerCase();
+  const rm = document.getElementById('fRoomFilter')?.value     || '';
+  const ct = document.getElementById('fCatFilter')?.value      || '';
+  const st = document.getElementById('fStatusFilter')?.value   || '';
+  const as = document.getElementById('fAssigneeFilter')?.value || '';
+  return p.items.filter(i => {
+    if (q  && !i.desc.toLowerCase().includes(q) && !(i.cat||'').toLowerCase().includes(q) && !(i.room||'').toLowerCase().includes(q) && !(i.comment||'').toLowerCase().includes(q)) return false;
+    if (rm && i.room !== rm) return false;
+    if (ct && i.cat  !== ct) return false;
+    if (st && i.status !== st) return false;
+    if (as && i.assignee !== as) return false;
+    return true;
+  });
+}
+
+// ============================================================
+//  HELPERS
+// ============================================================
+function sClass(s) {
+  if (s==='Open')        return 'open';
+  if (s==='In Progress') return 'inprog';
+  if (s==='Complete')    return 'complete';
+  if (s==='On Hold')     return 'onhold';
+  return 'open';
+}
+
+function statusSelectHTML(id, cur) {
+  const c = sClass(cur||'Open');
+  return `<select class="status-sel ss-${c}" onchange="quickStatus('${id}',this)">
+    <option value="Open"        ${cur==='Open'       ?'selected':''}>● Open</option>
+    <option value="In Progress" ${cur==='In Progress'?'selected':''}>◉ In Progress</option>
+    <option value="Complete"    ${cur==='Complete'   ?'selected':''}>✓ Complete</option>
+    <option value="On Hold"     ${cur==='On Hold'    ?'selected':''}>⏸ On Hold</option>
+  </select>`;
+}
+
+function pBadge(p) {
+  return `<span class="pbadge p-${(p||'Medium').toLowerCase()}">${p||'Medium'}</span>`;
+}
+
+function assigneeDisplay(a) {
+  if (a) return `<span class="assignee-tag">👷 ${a}</span>`;
+  return `<span class="assignee-tag unassigned">Unassigned</span>`;
+}
+
+function fmtDate(d) {
+  try { return new Date(d+'T12:00:00').toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'}); }
+  catch(e) { return d; }
+}
+
+// ============================================================
+//  RENDER
+// ============================================================
+function renderAll() {
+  const p = proj(); if (!p) return;
+  renderProjSelector();
+  renderProjBanner();
+  renderStats();
+  renderProgress();
+  renderDashRooms();
+  renderFilterDropdowns();
+  renderTable();
+  renderGrouped();
+  document.getElementById('nbAll').textContent = p.items.length;
+}
+
+function renderProjSelector() {
+  const sel = document.getElementById('projectSelect');
+  sel.innerHTML = '';
+  Object.values(ST.projects).forEach(p => {
+    const o = document.createElement('option');
+    o.value = p.id; o.textContent = p.name;
+    if (p.id === ST.currentProject) o.selected = true;
+    sel.appendChild(o);
+  });
+}
+
+function renderProjBanner() {
+  const p = proj();
+  const done = p.items.filter(i=>i.status==='Complete').length;
+  const pct  = p.items.length ? Math.round(done/p.items.length*100) : 0;
+  document.getElementById('projBanner').innerHTML = `
+    <div class="pb-item"><span class="pb-label">Project</span><span class="pb-value">${p.name}</span></div>
+    <div class="pb-item"><span class="pb-label">Address</span><span class="pb-value">${p.address||'—'}</span></div>
+    <div class="pb-item"><span class="pb-label">Manager</span><span class="pb-value">${p.manager||'—'}</span></div>
+    <div class="pb-item"><span class="pb-label">Date</span><span class="pb-value">${p.date?fmtDate(p.date):'—'}</span></div>
+    <div class="pb-item"><span class="pb-label">Total Items</span><span class="pb-value">${p.items.length}</span></div>
+    <div class="pb-item"><span class="pb-label">Complete</span><span class="pb-value" style="color:var(--orange)">${pct}%</span></div>
+  `;
+}
+
+function renderStats() {
+  const it = proj().items;
+  const t=it.length, o=it.filter(i=>i.status==='Open').length,
+    pg=it.filter(i=>i.status==='In Progress').length,
+    d=it.filter(i=>i.status==='Complete').length,
+    h=it.filter(i=>i.status==='On Hold').length;
+  document.getElementById('statsGrid').innerHTML = `
+    <div class="stat-card sc-total"><div class="stat-num">${t}</div><div class="stat-lbl">Total Items</div></div>
+    <div class="stat-card sc-open"><div class="stat-num">${o}</div><div class="stat-lbl">Open</div><div class="stat-sub">Not started</div></div>
+    <div class="stat-card sc-prog"><div class="stat-num">${pg}</div><div class="stat-lbl">In Progress</div><div class="stat-sub">Active work</div></div>
+    <div class="stat-card sc-done"><div class="stat-num">${d}</div><div class="stat-lbl">Complete</div><div class="stat-sub">Finished</div></div>
+    <div class="stat-card sc-hold"><div class="stat-num">${h}</div><div class="stat-lbl">On Hold</div><div class="stat-sub">Paused</div></div>
+  `;
+}
+
+function renderProgress() {
+  const it=proj().items, t=it.length;
+  const d=it.filter(i=>i.status==='Complete').length;
+  const pg=it.filter(i=>i.status==='In Progress').length;
+  const pct=t?Math.round(d/t*100):0, ppct=t?Math.round(pg/t*100):0;
+  document.getElementById('progPct').textContent = pct+'%';
+  document.getElementById('progTrack').innerHTML =
+    `<div class="pf-done" style="width:${pct}%"></div><div class="pf-prog" style="width:${ppct}%"></div>`;
+}
+
+function renderDashRooms() {
+  const p = proj();
+  const rooms = [...new Set(p.items.map(i=>i.room||'Unassigned'))].sort();
+  document.getElementById('dashRooms').innerHTML = rooms.map(room => {
+    const its=p.items.filter(i=>(i.room||'Unassigned')===room);
+    const d=its.filter(i=>i.status==='Complete').length;
+    const pg=its.filter(i=>i.status==='In Progress').length;
+    const o=its.filter(i=>i.status==='Open').length;
+    const pct=Math.round(d/its.length*100);
+    const clr=pct===100?'var(--success)':pct>50?'var(--orange)':'var(--blue-mid)';
+    return `
+      <div class="room-card" onclick="switchView('byroom')">
+        <div class="rc-top">
+          <span class="rc-name">${room}</span>
+          <span class="rc-pct" style="color:${clr}">${pct}%</span>
+        </div>
+        <div class="rc-bar"><div class="rc-fill" style="width:${pct}%;background:${clr}"></div></div>
+        <div class="rc-chips">
+          <span class="chip chip-t">${its.length} items</span>
+          ${d?`<span class="chip chip-d">✓ ${d}</span>`:''}
+          ${pg?`<span class="chip chip-p">⚡ ${pg}</span>`:''}
+          ${o?`<span class="chip chip-o">○ ${o}</span>`:''}
+        </div>
+      </div>`;
+  }).join('');
+}
+
+function renderFilterDropdowns() {
+  const p = proj();
+  const rmEl=document.getElementById('fRoomFilter'), rmV=rmEl.value;
+  const ctEl=document.getElementById('fCatFilter'),   ctV=ctEl.value;
+  const asEl=document.getElementById('fAssigneeFilter'), asV=asEl.value;
+
+  const rooms=[...new Set(p.items.map(i=>i.room).filter(Boolean))].sort();
+  rmEl.innerHTML='<option value="">All Rooms</option>'+rooms.map(r=>`<option value="${r}">${r}</option>`).join('');
+  rmEl.value=rmV;
+
+  const cats=[...new Set(p.items.map(i=>i.cat).filter(Boolean))].sort();
+  ctEl.innerHTML='<option value="">All Categories</option>'+cats.map(c=>`<option value="${c}">${c}</option>`).join('');
+  ctEl.value=ctV;
+
+  const asgns=[...new Set(p.items.map(i=>i.assignee).filter(Boolean))].sort();
+  asEl.innerHTML='<option value="">All Assignees</option>'+asgns.map(a=>`<option value="${a}">${a}</option>`).join('');
+  asEl.value=asV;
+}
+
+function renderTable() {
+  const items = filteredItems();
+  const n = items.length;
+  document.getElementById('tblCount').textContent = n+' item'+(n!==1?'s':'');
+
+  // Mobile
+  const mc = document.getElementById('mobileCards');
+  mc.innerHTML = n===0
+    ? `<div class="empty"><div class="empty-icon">🔍</div><div class="empty-title">No items match</div></div>`
+    : items.map(item => {
+        const sc = sClass(item.status||'Open');
+        return `<div class="mcard mc-${sc}">
+          <div class="mcard-top">
+            <span class="mcard-desc">${item.desc}</span>
+            <button class="btn-edit" onclick="openEditModal('${item.id}')">✎ Edit</button>
+          </div>
+          <div class="mcard-meta">
+            ${item.cat?`<span class="mtag">🏷 ${item.cat}</span>`:''}
+            ${item.room?`<span class="mtag">📍 ${item.room}</span>`:''}
+            ${item.assignee?`<span class="mtag">👷 ${item.assignee}</span>`:`<span class="mtag" style="color:var(--gray-400)">Unassigned</span>`}
+            ${pBadge(item.priority)}
+          </div>
+          <div class="mcard-foot">
+            ${statusSelectHTML(item.id, item.status)}
+            <button class="btn-del-sm" onclick="promptDel('${item.id}')">🗑</button>
+          </div>
+        </div>`;
+      }).join('');
+
+  // Desktop
+  const tb = document.getElementById('tblBody');
+  tb.innerHTML = n===0
+    ? `<tr><td colspan="10"><div class="empty"><div class="empty-icon">🔍</div><div class="empty-title">No items match your filters</div><div class="empty-sub">Clear filters or add a new item</div></div></td></tr>`
+    : items.map((item,i) => `
+      <tr>
+        <td class="td-num">${i+1}</td>
+        <td><span class="cat-tag">${item.cat||'—'}</span></td>
+        <td class="text-muted fw7">${item.room||'—'}</td>
+        <td style="max-width:230px;font-weight:500;">${item.desc}</td>
+        <td>${assigneeDisplay(item.assignee)}</td>
+        <td>${pBadge(item.priority)}</td>
+        <td>${statusSelectHTML(item.id, item.status)}</td>
+        <td class="text-muted">${item.due||'—'}</td>
+        <td style="max-width:130px;font-size:11.5px;color:var(--gray-400);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;" title="${item.comment||''}">${item.comment||'—'}</td>
+        <td>
+          <div class="action-cell">
+            <button class="btn-edit" onclick="openEditModal('${item.id}')">✎ Edit</button>
+            <button class="btn-del-sm" onclick="promptDel('${item.id}')">🗑</button>
+          </div>
+        </td>
+      </tr>`).join('');
+}
+
+function renderGrouped() {
+  const p = proj(), all = p.items;
+
+  const rooms=[...new Set(all.map(i=>i.room||'Unassigned'))].sort();
+  document.getElementById('roomGroups').innerHTML=rooms.map(g=>groupBlock(g,all.filter(i=>(i.room||'Unassigned')===g),'📍',false)).join('');
+
+  const teams=[...new Set(all.map(i=>i.assignee||'Unassigned'))].sort();
+  document.getElementById('teamGroups').innerHTML=teams.map(g=>groupBlock(g,all.filter(i=>(i.assignee||'Unassigned')===g),'👷',false)).join('');
+
+  const cats=[...new Set(all.map(i=>i.cat||'Uncategorized'))].sort();
+  document.getElementById('catGroups').innerHTML=cats.map(g=>groupBlock(g,all.filter(i=>(i.cat||'Uncategorized')===g),'🏷',false)).join('');
+
+  ['Open','In Progress','On Hold','Complete'].forEach(s=>{
+    const its=all.filter(i=>(i.status||'Open')===s);
+    document.getElementById('statusGroups').innerHTML+=its.length?groupBlock(s,its,'📋',true):'';
+  });
+  // Clear + rebuild to avoid duplication
+  const sg=document.getElementById('statusGroups');
+  sg.innerHTML='';
+  ['Open','In Progress','On Hold','Complete'].forEach(s=>{
+    const its=all.filter(i=>(i.status||'Open')===s);
+    if(its.length) sg.innerHTML+=groupBlock(s,its,'📋',true);
+  });
+}
+
+function groupBlock(title, items, icon, isStatus) {
+  const d=items.filter(i=>i.status==='Complete').length;
+  const pct=items.length?Math.round(d/items.length*100):0;
+  const catRoomHead = isStatus
+    ? `<th>Category</th><th>Room</th>`
+    : `<th>Category / Room</th>`;
+  const statusHead  = isStatus ? '' : `<th>Status</th>`;
+
+  const rows = items.map((item,i)=>{
+    const catRoom = isStatus
+      ? `<td><span class="cat-tag">${item.cat||'—'}</span></td><td class="text-muted">${item.room||'—'}</td>`
+      : `<td><span class="cat-tag">${item.cat||'—'}</span><br><span class="text-muted">${item.room||'—'}</span></td>`;
+    const statusCol = isStatus ? '' : `<td>${statusSelectHTML(item.id,item.status)}</td>`;
+    return `<tr>
+      <td class="td-num">${i+1}</td>
+      ${catRoom}
+      <td style="font-weight:500;max-width:200px;">${item.desc}${item.comment?`<br><span class="text-muted">${item.comment}</span>`:''}</td>
+      <td>${assigneeDisplay(item.assignee)}</td>
+      <td>${pBadge(item.priority)}</td>
+      ${statusCol}
+      <td><div class="action-cell">
+        <button class="btn-edit" onclick="openEditModal('${item.id}')">✎ Edit</button>
+        <button class="btn-del-sm" onclick="promptDel('${item.id}')">🗑</button>
+      </div></td>
+    </tr>`;
+  }).join('');
+
+  return `<div class="group-block">
+    <div class="group-head">
+      <span class="group-head-title">${icon} ${title}</span>
+      <div class="group-head-r">
+        <span class="gcnt">${items.length} item${items.length!==1?'s':''}</span>
+        ${!isStatus?`<div class="mini-prog"><div class="mpt"><div class="mpf" style="width:${pct}%"></div></div><span>${pct}%</span></div>`:''}
+      </div>
+    </div>
+    <div class="group-body">
+      <div class="tbl-scroll"><table>
+        <thead><tr><th>#</th>${catRoomHead}<th>Description</th><th>Assigned To</th><th>Priority</th>${statusHead}<th>Actions</th></tr></thead>
+        <tbody>${rows}</tbody>
+      </table></div>
+    </div>
+  </div>`;
+}
+
+// ============================================================
+//  MODAL — populate dropdowns (uses mf* IDs, no conflict)
+// ============================================================
+function populateModalDropdowns(selectedCat, selectedRoom, selectedAssignee) {
+  const p = proj();
+
+  const catEl = document.getElementById('mfCat');
+  catEl.innerHTML = '<option value="">Select category…</option>' +
+    p.cats.map(c=>`<option value="${c}"${c===selectedCat?' selected':''}>${c}</option>`).join('');
+
+  const roomEl = document.getElementById('mfRoom');
+  roomEl.innerHTML = '<option value="">Select room…</option>' +
+    p.rooms.map(r=>`<option value="${r}"${r===selectedRoom?' selected':''}>${r}</option>`).join('');
+
+  const assigneeEl = document.getElementById('mfAssignee');
+  assigneeEl.innerHTML = '<option value="">Unassigned</option>' +
+    p.teams.map(t=>`<option value="${t}"${t===selectedAssignee?' selected':''}>${t}</option>`).join('');
+}
+
+function openAddModal() {
+  ST.editId = null;
+  document.getElementById('modalTitle').textContent = 'Add Punch List Item';
+  document.getElementById('mfDesc').value     = '';
+  document.getElementById('mfComment').value  = '';
+  document.getElementById('mfDue').value      = '';
+  document.getElementById('mfCompleted').value= '';
+  document.getElementById('mfStatus').value   = 'Open';
+  document.getElementById('mfPriority').value = 'Medium';
+  populateModalDropdowns('','','');
+  closeAllManagePanels();
+  document.getElementById('itemModalBg').classList.add('open');
+  setTimeout(()=>document.getElementById('mfDesc').focus(), 320);
+}
+
+function openEditModal(id) {
+  const p = proj();
+  const item = p.items.find(i=>i.id===id);
+  if (!item) return;
+  ST.editId = id;
+  document.getElementById('modalTitle').textContent = 'Edit Item';
+  populateModalDropdowns(item.cat||'', item.room||'', item.assignee||'');
+  document.getElementById('mfDesc').value      = item.desc||'';
+  document.getElementById('mfPriority').value  = item.priority||'Medium';
+  document.getElementById('mfStatus').value    = item.status||'Open';
+  document.getElementById('mfDue').value       = item.due||'';
+  document.getElementById('mfCompleted').value = item.completed||'';
+  document.getElementById('mfComment').value   = item.comment||'';
+  closeAllManagePanels();
+  document.getElementById('itemModalBg').classList.add('open');
+}
+
+function closeModal() {
+  document.getElementById('itemModalBg').classList.remove('open');
+  stopAllDictation();
+}
+
+function saveItem() {
+  const desc = document.getElementById('mfDesc').value.trim();
+  if (!desc) { showToast('⚠️ Description is required'); return; }
+  const p = proj();
+  const data = {
+    desc,
+    cat:       document.getElementById('mfCat').value,
+    room:      document.getElementById('mfRoom').value,
+    assignee:  document.getElementById('mfAssignee').value,
+    priority:  document.getElementById('mfPriority').value,
+    status:    document.getElementById('mfStatus').value,
+    due:       document.getElementById('mfDue').value,
+    completed: document.getElementById('mfCompleted').value,
+    comment:   document.getElementById('mfComment').value,
+  };
+  if (ST.editId) {
+    const idx = p.items.findIndex(i=>i.id===ST.editId);
+    if (idx!==-1) p.items[idx] = {...p.items[idx], ...data};
+    showToast('✅ Item updated');
+  } else {
+    p.items.push({...data, id:uid()});
+    showToast('✅ Item added');
+  }
+  save(); closeModal(); renderAll();
+}
+
+// ============================================================
+//  MANAGE LISTS
+// ============================================================
+function toggleManage(panelId) {
+  const panel = document.getElementById(panelId);
+  const isOpen = panel.classList.contains('open');
+  closeAllManagePanels();
+  if (!isOpen) {
+    panel.classList.add('open');
+    if (panelId==='manageRooms') renderManageList('rooms','roomItemsList','mfRoom');
+    if (panelId==='manageTeam')  renderManageList('teams','teamItemsList','mfAssignee');
+  }
+}
+function closeAllManagePanels() {
+  document.querySelectorAll('.manage-panel').forEach(p=>p.classList.remove('open'));
+}
+function renderManageList(listKey, containerEl, selectEl) {
+  const p = proj(), list = p[listKey];
+  const el = document.getElementById(containerEl);
+  el.innerHTML = list.map((item,i) =>
+    `<div class="manage-item"><span>${item}</span>
+     <button class="manage-item-del" onclick="deleteListEntry('${listKey}',${i},'${containerEl}','${selectEl}')" title="Remove">&#10005;</button>
+    </div>`).join('') || '<div style="color:var(--gray-400);font-size:12px;padding:4px;">No entries yet.</div>';
+}
+function deleteListEntry(listKey, idx, containerEl, selectEl) {
+  const p = proj();
+  const removed = p[listKey].splice(idx, 1)[0];
+  save();
+  renderManageList(listKey, containerEl, selectEl);
+  populateModalDropdowns(document.getElementById('mfCat').value, document.getElementById('mfRoom').value, document.getElementById('mfAssignee').value);
+  showToast('"' + removed + '" removed');
+}
+function addListEntry(listKey, inputId, selectEl) {
+  const input = document.getElementById(inputId);
+  const val = input.value.trim();
+  if (!val) { showToast('Please enter a name'); return; }
+  const p = proj();
+  if (p[listKey].includes(val)) { showToast('Already exists'); return; }
+  p[listKey].push(val);
+  p[listKey].sort();
+  input.value = '';
+  save();
+  const contId = listKey==='rooms' ? 'roomItemsList' : 'teamItemsList';
+  renderManageList(listKey, contId, selectEl);
+  populateModalDropdowns(document.getElementById('mfCat').value, document.getElementById('mfRoom').value, document.getElementById('mfAssignee').value);
+  document.getElementById(selectEl).value = val;
+  showToast('"' + val + '" added');
+}
+
+// ============================================================
+//  INLINE STATUS UPDATE
+// ============================================================
+function quickStatus(id, sel) {
+  const p = proj();
+  const item = p.items.find(i=>i.id===id);
+  if (!item) return;
+  item.status = sel.value;
+  if (sel.value==='Complete' && !item.completed) item.completed = new Date().toISOString().split('T')[0];
+  sel.className = 'status-sel ss-' + sClass(sel.value);
+  save(); renderAll();
+  showToast('Status set to ' + sel.value);
+}
+
+// ============================================================
+//  DELETE
+// ============================================================
+function promptDel(id) { ST.delId=id; document.getElementById('delOverlay').style.display='flex'; }
+function cancelDel()   { ST.delId=null; document.getElementById('delOverlay').style.display='none'; }
+function confirmDel()  {
+  const p = proj();
+  p.items = p.items.filter(i=>i.id!==ST.delId);
+  ST.delId = null;
+  document.getElementById('delOverlay').style.display='none';
+  save(); renderAll(); showToast('Item deleted');
+}
+
+// ============================================================
+//  FILTERS
+// ============================================================
+function clearFilters() {
+  ['fSearch','fRoomFilter','fCatFilter','fStatusFilter','fAssigneeFilter'].forEach(id=>{
+    const el=document.getElementById(id); if(el) el.value='';
+  });
+  renderTable();
+}
+
+// ============================================================
+//  VIEW SWITCHING
+// ============================================================
+function switchView(v) {
+  ST.view=v;
+  document.querySelectorAll('.view-section').forEach(el=>el.classList.remove('active'));
+  document.querySelectorAll('.nav-tab').forEach(el=>el.classList.remove('active'));
+  document.getElementById('view-'+v) && document.getElementById('view-'+v).classList.add('active');
+  var tab = document.querySelector('[data-view="'+v+'"]');
+  if (tab) tab.classList.add('active');
+}
+function switchProject(pid) { ST.currentProject=pid; clearFilters(); save(); renderAll(); }
+
+// ============================================================
+//  NEW PROJECT
+// ============================================================
+function showNewProjectModal() {
+  ['npName','npAddr','npMgr','npDate'].forEach(id=>document.getElementById(id).value='');
+  document.getElementById('projModalBg').classList.add('open');
+  setTimeout(()=>document.getElementById('npName').focus(), 320);
+}
+function closeProjModal() { document.getElementById('projModalBg').classList.remove('open'); }
+function createProject() {
+  const name = document.getElementById('npName').value.trim();
+  if (!name) { showToast('Project name is required'); return; }
+  const pid = uid();
+  ST.projects[pid] = {
+    id:pid, name,
+    address: document.getElementById('npAddr').value.trim(),
+    manager: document.getElementById('npMgr').value.trim(),
+    date:    document.getElementById('npDate').value,
+    teams:[...DEF_TEAMS], rooms:[...DEF_ROOMS], cats:[...DEF_CATS], items:[]
+  };
+  ST.currentProject=pid;
+  closeProjModal(); save(); renderAll();
+  showToast('Project created: '+name);
+}
+
+// ============================================================
+//  EXPORT CSV
+// ============================================================
+function exportCSV() {
+  const p=proj(), items=filteredItems();
+  const cols=['#','Category','Room','Description','Assigned To','Priority','Status','Due Date','Date Completed','Comment'];
+  const rows=items.map((item,i)=>[
+    i+1, item.cat||'', item.room||'',
+    '"'+(item.desc||'').replace(/"/g,'""')+'"',
+    item.assignee||'', item.priority||'', item.status||'',
+    item.due||'', item.completed||'',
+    '"'+(item.comment||'').replace(/"/g,'""')+'"'
+  ]);
+  const csv=[cols.join(','),...rows.map(r=>r.join(','))].join('\n');
+  var a = document.createElement('a');
+  a.href = URL.createObjectURL(new Blob([csv],{type:'text/csv'}));
+  a.download = p.name.replace(/\s+/g,'-')+'-punch-list.csv';
+  a.click();
+  showToast('CSV exported');
+}
+
+// ============================================================
+//  VOICE DICTATION
+// ============================================================
+var activeRecognition = null;
+
+function stopAllDictation() {
+  if (activeRecognition) { try { activeRecognition.stop(); } catch(e){} activeRecognition = null; }
+  document.querySelectorAll('.mic-btn').forEach(function(b){ b.textContent='🎤'; b.classList.remove('recording'); });
+  document.getElementById('micDescStatus').textContent='';
+  document.getElementById('micCommentStatus').textContent='';
+}
+
+function startDictation(fieldId, btnId) {
+  var SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+  if (!SR) { showToast('Voice dictation not supported in this browser. Try Chrome.'); return; }
+  var btn = document.getElementById(btnId);
+  var statusId = btnId==='micDesc' ? 'micDescStatus' : 'micCommentStatus';
+  var statusEl = document.getElementById(statusId);
+  if (btn.classList.contains('recording')) { stopAllDictation(); return; }
+  stopAllDictation();
+  var recog = new SR();
+  activeRecognition = recog;
+  recog.continuous = false;
+  recog.interimResults = true;
+  recog.lang = 'en-US';
+  btn.textContent = '🔴';
+  btn.classList.add('recording');
+  statusEl.textContent = 'Listening... tap mic again to stop';
+  recog.onresult = function(e) {
+    var interim = '', final = '';
+    for (var i=0; i<e.results.length; i++) {
+      if (e.results[i].isFinal) final += e.results[i][0].transcript;
+      else interim += e.results[i][0].transcript;
+    }
+    if (final) {
+      var field = document.getElementById(fieldId);
+      field.value = (field.value ? field.value.trimEnd()+' ' : '') + final.trim();
+    }
+    statusEl.textContent = interim ? 'Heard: "'+interim+'"' : 'Listening...';
+  };
+  recog.onerror = function(e) {
+    stopAllDictation();
+    showToast(e.error==='not-allowed' ? 'Microphone access denied' : 'Dictation error: '+e.error);
+  };
+  recog.onend = function() { stopAllDictation(); };
+  recog.start();
+}
+
+// ============================================================
+//  TOAST
+// ============================================================
+function showToast(msg) {
+  var t=document.getElementById('toast');
+  t.textContent=msg; t.classList.add('show');
+  clearTimeout(t._to);
+  t._to=setTimeout(function(){ t.classList.remove('show'); }, 2600);
+}
+
+// ============================================================
+//  OUTSIDE CLICK / KEYBOARD
+// ============================================================
+['itemModalBg','projModalBg'].forEach(function(id){
+  document.getElementById(id).addEventListener('click', function(e) {
+    if (e.target===this) {
+      this.classList.remove('open');
+      if (id==='itemModalBg') stopAllDictation();
+    }
+  });
+});
+document.addEventListener('keydown', function(e){
+  if (e.key==='Escape') {
+    document.getElementById('itemModalBg').classList.remove('open');
+    document.getElementById('projModalBg').classList.remove('open');
+    cancelDel(); stopAllDictation();
+  }
+});
+
+// ============================================================
+//  INIT
+// ============================================================
+load();
+renderAll();
+// Remove rogue text nodes caused by duplicate content after </html>
+setTimeout(function(){
+  Array.from(document.body.childNodes).forEach(function(n){
+    if(n.nodeType===3)n.remove();
+  });
+},0);
+</script>
+</body>
+</html>
