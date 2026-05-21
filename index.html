@@ -761,6 +761,30 @@
     .text-muted { color:var(--gray-400); font-size:11.5px; }
     .fw7 { font-weight:700; }
     .section-gap { margin-bottom:12px; }
+
+  /* ---- Cloud Sync Badge ---- */
+  #syncBadge {
+    font-size: .72rem; font-weight: 600; padding: 3px 10px; border-radius: 12px;
+    margin-left: 10px; display: none; white-space: nowrap; transition: background .3s;
+  }
+  #syncBadge.ok      { background: #d4edda; color: #155724; display: inline-block; }
+  #syncBadge.saving  { background: #fff3cd; color: #856404; display: inline-block; }
+  #syncBadge.error   { background: #f8d7da; color: #721c24; display: inline-block; }
+  #syncBadge.warn    { background: #fff3cd; color: #856404; display: inline-block; }
+
+  /* ---- Loading overlay ---- */
+  #loadingOverlay {
+    position: fixed; inset: 0; background: rgba(0,48,135,.82);
+    display: flex; flex-direction: column; align-items: center; justify-content: center;
+    z-index: 9999; color: #fff; font-size: 1.1rem; font-weight: 600; gap: 18px;
+  }
+  #loadingOverlay.hidden { display: none; }
+  .spinner {
+    width: 48px; height: 48px; border: 5px solid rgba(255,255,255,.3);
+    border-top-color: #BF5700; border-radius: 50%;
+    animation: spin .8s linear infinite;
+  }
+  @keyframes spin { to { transform: rotate(360deg); } }
   </style>
 </head>
 <body>
@@ -784,6 +808,7 @@
     </div>
 
     <button class="btn-hdr" onclick="showNewProjectModal()">＋ New Project</button>
+    <span id="syncBadge"></span>
   </div>
 
   <nav class="nav-tabs">
@@ -1066,6 +1091,12 @@
   </div>
 </div>
 
+<!-- LOADING OVERLAY -->
+<div id="loadingOverlay">
+  <div class="spinner"></div>
+  <span>Loading from cloud…</span>
+</div>
+
 <!-- TOAST -->
 <div class="toast" id="toast"></div>
 
@@ -1149,19 +1180,68 @@ const LAWRENCE_ITEMS = [
 ];
 
 // ============================================================
+//  CLOUD CONFIG  — paste your deployed Apps Script URL below
+// ============================================================
+const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbwVYHdZSDHYlsFjZDcwrbOHZUjxKqZXQ4K4rXCSm3ZSJTYv5zeLI-Wg3szeH2Pgew/exec';
+
+// ============================================================
+//  SYNC HELPERS
+// ============================================================
+function showLoading(on) {
+  const el = document.getElementById('loadingOverlay');
+  if (el) el.classList.toggle('hidden', !on);
+}
+
+let _syncTimer = null;
+function showSyncBadge(msg, type) {
+  const el = document.getElementById('syncBadge');
+  if (!el) return;
+  el.textContent = msg;
+  el.className = type;          // ok | saving | error | warn
+  clearTimeout(_syncTimer);
+  if (type === 'ok') {
+    _syncTimer = setTimeout(() => { el.className = ''; el.style.display = 'none'; }, 4000);
+  }
+}
+
+// ============================================================
 //  STATE
 // ============================================================
 let ST = { currentProject: null, projects: {}, editId: null, delId: null, view: 'dashboard' };
 
-const uid  = () => Date.now().toString(36) + Math.random().toString(36).substr(2,5);
-const save = () => localStorage.setItem('acetech_pl_v3', JSON.stringify(ST));
+const uid = () => Date.now().toString(36) + Math.random().toString(36).substr(2,5);
 
-function load() {
+// ---- Cloud save (debounced 600 ms) ----
+let _saveTimer = null;
+function save() {
+  clearTimeout(_saveTimer);
+  _saveTimer = setTimeout(pushToCloud, 600);
+}
+
+async function pushToCloud() {
+  if (!SCRIPT_URL || SCRIPT_URL === 'PASTE_YOUR_APPS_SCRIPT_URL_HERE') {
+    // Fallback: keep using localStorage while URL not configured
+    try { localStorage.setItem('acetech_pl_v3', JSON.stringify(ST)); } catch(e) {}
+    return;
+  }
+  showSyncBadge('Saving…', 'saving');
   try {
-    const raw = localStorage.getItem('acetech_pl_v3');
-    if (raw) ST = JSON.parse(raw);
-  } catch(e) {}
+    const res = await fetch(SCRIPT_URL, {
+      method: 'POST',
+      headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+      body: JSON.stringify({ action: 'save', state: ST }),
+      redirect: 'follow'
+    });
+    const data = await res.json();
+    if (data.success) showSyncBadge('Saved ' + (data.savedAt || ''), 'ok');
+    else              showSyncBadge('Save error — check Apps Script', 'error');
+  } catch(err) {
+    showSyncBadge('Save failed — check connection', 'error');
+  }
+}
 
+function initSeedData() {
+  // Called when no cloud data exists — seeds with Lawrence Residence demo project
   if (!ST.projects || Object.keys(ST.projects).length === 0) {
     const pid = uid();
     ST.projects = {};
@@ -1172,11 +1252,48 @@ function load() {
       items: LAWRENCE_ITEMS.map(i => ({...i, id: uid()}))
     };
     ST.currentProject = pid;
-    save();
   }
   if (!ST.currentProject || !ST.projects[ST.currentProject]) {
     ST.currentProject = Object.keys(ST.projects)[0];
   }
+}
+
+async function load() {
+  showLoading(true);
+
+  // ---- Try cloud first ----
+  if (SCRIPT_URL && SCRIPT_URL !== 'PASTE_YOUR_APPS_SCRIPT_URL_HERE') {
+    try {
+      const res  = await fetch(SCRIPT_URL + '?action=load', { redirect: 'follow' });
+      const data = await res.json();
+      if (data.state && data.state.projects && Object.keys(data.state.projects).length > 0) {
+        ST = data.state;
+        if (!ST.currentProject || !ST.projects[ST.currentProject])
+          ST.currentProject = Object.keys(ST.projects)[0];
+        showLoading(false);
+        renderAll();
+        showSyncBadge('Loaded from cloud ☁', 'ok');
+        return;
+      }
+      // Cloud returned empty — seed data and push it up
+      initSeedData();
+      await pushToCloud();
+    } catch(err) {
+      showSyncBadge('Cloud unreachable — using local data', 'warn');
+    }
+  } else {
+    showSyncBadge('⚙ No cloud URL — data is device-only', 'warn');
+  }
+
+  // ---- Fallback: localStorage ----
+  try {
+    const raw = localStorage.getItem('acetech_pl_v3');
+    if (raw) { ST = JSON.parse(raw); }
+  } catch(e) {}
+
+  initSeedData();
+  showLoading(false);
+  renderAll();
 }
 
 const proj = () => ST.projects[ST.currentProject];
@@ -1774,14 +1891,7 @@ document.addEventListener('keydown', function(e){
 // ============================================================
 //  INIT
 // ============================================================
-load();
-renderAll();
-// Remove rogue text nodes caused by duplicate content after </html>
-setTimeout(function(){
-  Array.from(document.body.childNodes).forEach(function(n){
-    if(n.nodeType===3)n.remove();
-  });
-},0);
+load();   // async — shows loading overlay, fetches cloud state, then calls renderAll()
 </script>
 </body>
 </html>
