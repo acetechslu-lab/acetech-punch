@@ -762,6 +762,67 @@
     .fw7 { font-weight:700; }
     .section-gap { margin-bottom:12px; }
 
+  /* ---- Send Report Button ---- */
+  .btn-send-report {
+    background: var(--orange); color: #fff; border: none; border-radius: 6px;
+    padding: 5px 12px; font-size: .78rem; font-weight: 700; cursor: pointer;
+    display: flex; align-items: center; gap: 5px; white-space: nowrap;
+  }
+  .btn-send-report:hover { background: #a04800; }
+
+  /* ---- Assignee Report Modal ---- */
+  #reportModalBg {
+    position: fixed; inset: 0; background: rgba(0,0,0,.55);
+    display: flex; align-items: center; justify-content: center;
+    z-index: 4000; padding: 16px; opacity: 0; pointer-events: none;
+    transition: opacity .2s;
+  }
+  #reportModalBg.open { opacity: 1; pointer-events: auto; }
+  #reportModal {
+    background: #fff; border-radius: 14px; width: 100%; max-width: 720px;
+    max-height: 90vh; display: flex; flex-direction: column; overflow: hidden;
+    box-shadow: 0 20px 60px rgba(0,0,0,.35);
+  }
+  .rpt-head {
+    background: var(--blue); color: #fff; padding: 18px 22px;
+    display: flex; align-items: center; justify-content: space-between; flex-shrink: 0;
+  }
+  .rpt-head-title { font-size: 1.05rem; font-weight: 700; }
+  .rpt-head-sub   { font-size: .8rem; opacity: .8; margin-top: 2px; }
+  .rpt-close { background: none; border: none; color: #fff; font-size: 1.4rem; cursor: pointer; line-height: 1; }
+  .rpt-body   { overflow-y: auto; padding: 18px 22px; flex: 1; }
+  .rpt-foot   {
+    border-top: 1px solid #eee; padding: 14px 22px;
+    display: flex; gap: 10px; flex-wrap: wrap; justify-content: flex-end; flex-shrink: 0;
+  }
+  .rpt-item {
+    border: 1px solid #e8e8e8; border-radius: 8px; padding: 10px 14px;
+    margin-bottom: 8px; display: flex; gap: 12px; align-items: flex-start;
+  }
+  .rpt-num  { font-weight: 800; color: var(--blue); min-width: 22px; font-size: .9rem; }
+  .rpt-desc { font-weight: 600; font-size: .9rem; flex: 1; }
+  .rpt-meta { font-size: .77rem; color: #666; margin-top: 3px; }
+  .rpt-status-badge {
+    font-size: .72rem; font-weight: 700; padding: 2px 8px; border-radius: 10px;
+    white-space: nowrap; flex-shrink: 0;
+  }
+  .rpt-open     { background: #cce5ff; color: #004085; }
+  .rpt-inprog   { background: #fff3cd; color: #856404; }
+  .rpt-complete { background: #d4edda; color: #155724; }
+  .rpt-onhold   { background: #f8d7da; color: #721c24; }
+  .btn-pdf      { background: #003087; color: #fff; }
+  .btn-email    { background: #28a745; color: #fff; }
+  .btn-whatsapp { background: #25D366; color: #fff; }
+  .btn-pdf:hover      { background: #002060; }
+  .btn-email:hover    { background: #1e7e34; }
+  .btn-whatsapp:hover { background: #1aad52; }
+
+  /* ---- Print Styles (only the report window uses these) ---- */
+  @media print {
+    body > *:not(#reportModalBg) { display: none !important; }
+    #reportModalBg, #reportModal { all: unset !important; }
+  }
+
   /* ---- Cloud Sync Badge ---- */
   #syncBadge {
     font-size: .72rem; font-weight: 600; padding: 3px 10px; border-radius: 12px;
@@ -1078,6 +1139,25 @@
   </div>
 </div>
 
+<!-- ===================== ASSIGNEE REPORT ===================== -->
+<div id="reportModalBg">
+  <div id="reportModal">
+    <div class="rpt-head">
+      <div>
+        <div class="rpt-head-title" id="rptTitle">Assignee Report</div>
+        <div class="rpt-head-sub"  id="rptSub"></div>
+      </div>
+      <button class="rpt-close" onclick="closeReportModal()">✕</button>
+    </div>
+    <div class="rpt-body" id="rptBody"></div>
+    <div class="rpt-foot">
+      <button class="btn btn-pdf"      onclick="printReport()">🖨 Print / Save PDF</button>
+      <button class="btn btn-email"    onclick="emailReport()">✉ Email</button>
+      <button class="btn btn-whatsapp" onclick="whatsappReport()">💬 WhatsApp</button>
+    </div>
+  </div>
+</div>
+
 <!-- ===================== DELETE CONFIRM ===================== -->
 <div class="del-overlay" id="delOverlay" style="display:none;">
   <div class="del-box">
@@ -1182,7 +1262,7 @@ const LAWRENCE_ITEMS = [
 // ============================================================
 //  CLOUD CONFIG  — paste your deployed Apps Script URL below
 // ============================================================
-const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbwVYHdZSDHYlsFjZDcwrbOHZUjxKqZXQ4K4rXCSm3ZSJTYv5zeLI-Wg3szeH2Pgew/exec';
+const SCRIPT_URL = 'PASTE_YOUR_APPS_SCRIPT_URL_HERE';
 
 // ============================================================
 //  SYNC HELPERS
@@ -1522,7 +1602,7 @@ function renderGrouped() {
   document.getElementById('roomGroups').innerHTML=rooms.map(g=>groupBlock(g,all.filter(i=>(i.room||'Unassigned')===g),'📍',false)).join('');
 
   const teams=[...new Set(all.map(i=>i.assignee||'Unassigned'))].sort();
-  document.getElementById('teamGroups').innerHTML=teams.map(g=>groupBlock(g,all.filter(i=>(i.assignee||'Unassigned')===g),'👷',false)).join('');
+  document.getElementById('teamGroups').innerHTML=teams.map(g=>groupBlock(g,all.filter(i=>(i.assignee||'Unassigned')===g),'👷',false,true)).join('');
 
   const cats=[...new Set(all.map(i=>i.cat||'Uncategorized'))].sort();
   document.getElementById('catGroups').innerHTML=cats.map(g=>groupBlock(g,all.filter(i=>(i.cat||'Uncategorized')===g),'🏷',false)).join('');
@@ -1540,7 +1620,7 @@ function renderGrouped() {
   });
 }
 
-function groupBlock(title, items, icon, isStatus) {
+function groupBlock(title, items, icon, isStatus, canSend) {
   const d=items.filter(i=>i.status==='Complete').length;
   const pct=items.length?Math.round(d/items.length*100):0;
   const catRoomHead = isStatus
@@ -1573,6 +1653,7 @@ function groupBlock(title, items, icon, isStatus) {
       <div class="group-head-r">
         <span class="gcnt">${items.length} item${items.length!==1?'s':''}</span>
         ${!isStatus?`<div class="mini-prog"><div class="mpt"><div class="mpf" style="width:${pct}%"></div></div><span>${pct}%</span></div>`:''}
+        ${canSend&&title!=='Unassigned'?`<button class="btn-send-report" onclick="openReportModal('${title.replace(/'/g,"\\'")}')">📤 Send Report</button>`:''}
       </div>
     </div>
     <div class="group-body">
@@ -1880,13 +1961,155 @@ function showToast(msg) {
     }
   });
 });
+document.getElementById('reportModalBg').addEventListener('click', function(e){
+  if (e.target === this) closeReportModal();
+});
 document.addEventListener('keydown', function(e){
   if (e.key==='Escape') {
     document.getElementById('itemModalBg').classList.remove('open');
     document.getElementById('projModalBg').classList.remove('open');
+    closeReportModal();
     cancelDel(); stopAllDictation();
   }
 });
+
+// ============================================================
+//  ASSIGNEE REPORT
+// ============================================================
+let _reportAssignee = '';
+let _reportItems    = [];
+
+function openReportModal(assignee) {
+  const p = proj(); if (!p) return;
+  _reportAssignee = assignee;
+  _reportItems    = p.items.filter(i => (i.assignee || 'Unassigned') === assignee);
+
+  const open  = _reportItems.filter(i => i.status !== 'Complete').length;
+  const done  = _reportItems.filter(i => i.status === 'Complete').length;
+  const today = new Date().toLocaleDateString('en-US', {month:'long', day:'numeric', year:'numeric'});
+
+  document.getElementById('rptTitle').textContent = '👷 ' + assignee + ' — Punch List';
+  document.getElementById('rptSub').textContent   =
+    p.name + ' · ' + today + ' · ' + _reportItems.length + ' items (' + open + ' open, ' + done + ' complete)';
+
+  const statusClass = s => {
+    if (s === 'Complete')    return 'rpt-complete';
+    if (s === 'In Progress') return 'rpt-inprog';
+    if (s === 'On Hold')     return 'rpt-onhold';
+    return 'rpt-open';
+  };
+
+  document.getElementById('rptBody').innerHTML = _reportItems.length === 0
+    ? '<p style="color:#888;text-align:center;padding:30px 0;">No items assigned.</p>'
+    : _reportItems.map((item, i) => `
+      <div class="rpt-item">
+        <div class="rpt-num">${i + 1}</div>
+        <div style="flex:1">
+          <div class="rpt-desc">${item.desc}</div>
+          <div class="rpt-meta">
+            ${item.room  ? '📍 ' + item.room + '&nbsp;&nbsp;' : ''}
+            ${item.cat   ? '🏷 ' + item.cat  + '&nbsp;&nbsp;' : ''}
+            ${item.due   ? '📅 Due: ' + item.due + '&nbsp;&nbsp;' : ''}
+            ${item.priority !== 'Medium' ? '⚡ ' + item.priority + '&nbsp;&nbsp;' : ''}
+            ${item.comment ? '<br>💬 ' + item.comment : ''}
+          </div>
+        </div>
+        <span class="rpt-status-badge ${statusClass(item.status || 'Open')}">${item.status || 'Open'}</span>
+      </div>`).join('');
+
+  document.getElementById('reportModalBg').classList.add('open');
+}
+
+function closeReportModal() {
+  document.getElementById('reportModalBg').classList.remove('open');
+}
+
+function _reportText() {
+  const p    = proj();
+  const today = new Date().toLocaleDateString('en-US', {month:'long', day:'numeric', year:'numeric'});
+  let txt = 'PUNCH LIST — ' + _reportAssignee.toUpperCase() + '\n';
+  txt    += (p ? p.name : '') + ' | ' + today + '\n';
+  txt    += '─'.repeat(40) + '\n\n';
+  _reportItems.forEach((item, i) => {
+    txt += (i + 1) + '. ' + item.desc + '\n';
+    if (item.room)    txt += '   📍 ' + item.room + '\n';
+    if (item.cat)     txt += '   🏷 ' + item.cat  + '\n';
+    txt += '   Status: ' + (item.status || 'Open');
+    if (item.priority && item.priority !== 'Medium') txt += '  |  Priority: ' + item.priority;
+    if (item.due)     txt += '  |  Due: ' + item.due;
+    txt += '\n';
+    if (item.comment) txt += '   💬 ' + item.comment + '\n';
+    txt += '\n';
+  });
+  txt += '─'.repeat(40) + '\n';
+  txt += 'Sent by ACEtech · ' + today;
+  return txt;
+}
+
+function printReport() {
+  const p     = proj();
+  const today = new Date().toLocaleDateString('en-US', {month:'long', day:'numeric', year:'numeric'});
+  const statusColor = s => {
+    if (s === 'Complete')    return '#d4edda;color:#155724';
+    if (s === 'In Progress') return '#fff3cd;color:#856404';
+    if (s === 'On Hold')     return '#f8d7da;color:#721c24';
+    return '#cce5ff;color:#004085';
+  };
+  const rows = _reportItems.map((item, i) => `
+    <tr style="border-bottom:1px solid #eee;">
+      <td style="padding:7px 6px;font-weight:700;color:#003087;width:30px;">${i+1}</td>
+      <td style="padding:7px 6px;font-weight:600;max-width:220px;">${item.desc}${item.comment?'<br><span style="font-size:11px;color:#666;">'+item.comment+'</span>':''}</td>
+      <td style="padding:7px 6px;font-size:12px;color:#444;">${item.room||'—'}</td>
+      <td style="padding:7px 6px;font-size:12px;color:#444;">${item.cat||'—'}</td>
+      <td style="padding:7px 6px;font-size:12px;color:#444;">${item.due||'—'}</td>
+      <td style="padding:7px 6px;"><span style="background:${statusColor(item.status||'Open')};padding:2px 8px;border-radius:10px;font-size:11px;font-weight:700;">${item.status||'Open'}</span></td>
+      <td style="padding:7px 6px;font-size:12px;color:#444;">${item.priority||'Medium'}</td>
+    </tr>`).join('');
+
+  const win = window.open('', '_blank');
+  win.document.write(`<!DOCTYPE html><html><head><meta charset="utf-8">
+  <title>Punch List — ${_reportAssignee}</title>
+  <style>
+    body { font-family: Arial, sans-serif; margin: 0; padding: 24px; color: #222; }
+    @media print { body { padding: 0; } }
+    .hdr { background: #003087; color: #fff; padding: 16px 20px; border-radius: 8px; margin-bottom: 20px; }
+    .hdr h1 { margin:0 0 4px; font-size: 18px; }
+    .hdr p  { margin:0; font-size: 12px; opacity: .8; }
+    table { width: 100%; border-collapse: collapse; font-size: 13px; }
+    thead tr { background: #BF5700; color: #fff; }
+    thead th { padding: 8px 6px; text-align: left; font-size: 12px; }
+    tbody tr:nth-child(even) { background: #f9f9f9; }
+    .footer { margin-top: 20px; font-size: 11px; color: #888; text-align: center; border-top: 1px solid #eee; padding-top: 10px; }
+    @media print { .no-print { display: none; } }
+  </style></head><body>
+  <div class="no-print" style="margin-bottom:16px;">
+    <button onclick="window.print()" style="background:#003087;color:#fff;border:none;padding:8px 18px;border-radius:6px;font-size:14px;cursor:pointer;font-weight:700;">🖨 Print / Save as PDF</button>
+    <button onclick="window.close()" style="margin-left:10px;background:#eee;border:none;padding:8px 18px;border-radius:6px;font-size:14px;cursor:pointer;">Close</button>
+  </div>
+  <div class="hdr">
+    <h1>👷 ${_reportAssignee} — Punch List</h1>
+    <p>${p ? p.name : ''} &nbsp;|&nbsp; ${today} &nbsp;|&nbsp; ${_reportItems.length} items</p>
+  </div>
+  <table>
+    <thead><tr><th>#</th><th>Description</th><th>Room</th><th>Category</th><th>Due Date</th><th>Status</th><th>Priority</th></tr></thead>
+    <tbody>${rows}</tbody>
+  </table>
+  <div class="footer">ACEtech Construction Management &nbsp;·&nbsp; ${today}</div>
+  </body></html>`);
+  win.document.close();
+}
+
+function emailReport() {
+  const p    = proj();
+  const subj = encodeURIComponent('Punch List — ' + _reportAssignee + (p ? ' · ' + p.name : ''));
+  const body = encodeURIComponent(_reportText());
+  window.open('mailto:?subject=' + subj + '&body=' + body);
+}
+
+function whatsappReport() {
+  const text = encodeURIComponent(_reportText());
+  window.open('https://wa.me/?text=' + text);
+}
 
 // ============================================================
 //  INIT
