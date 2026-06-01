@@ -817,35 +817,8 @@
   .btn-email:hover    { background: #1e7e34; }
   .btn-whatsapp:hover { background: #1aad52; }
 
-  /* ---- Print frame (hidden on screen, shown on print) ---- */
+  /* ---- Print frame ---- */
   #printFrame { display: none; }
-  @media print {
-    body > *:not(#printFrame) { display: none !important; }
-    #printFrame {
-      display: block !important;
-      font-family: Arial, sans-serif;
-      font-size: 12px;
-      color: #222;
-      padding: 0;
-      margin: 0;
-    }
-    #printFrame .ph { background: #003087 !important; -webkit-print-color-adjust: exact; print-color-adjust: exact; color: #fff !important; padding: 12px 16px; border-radius: 6px; margin-bottom: 14px; display: flex; justify-content: space-between; align-items: center; }
-    #printFrame .ph h1 { margin: 0 0 2px; font-size: 16px; }
-    #printFrame .ph p  { margin: 0; font-size: 11px; opacity: .85; }
-    #printFrame .ph-r  { text-align: right; font-size: 11px; line-height: 1.6; }
-    #printFrame table  { width: 100%; border-collapse: collapse; }
-    #printFrame thead tr { background: #BF5700 !important; -webkit-print-color-adjust: exact; print-color-adjust: exact; color: #fff !important; }
-    #printFrame thead th { padding: 5px 6px; text-align: left; font-size: 11px; font-weight: 700; }
-    #printFrame td { padding: 4px 6px; font-size: 12px; }
-    #printFrame .cat-hdr td { background: #003087 !important; -webkit-print-color-adjust: exact; print-color-adjust: exact; color: #fff !important; font-size: 11px; font-weight: 700; letter-spacing: .4px; text-transform: uppercase; padding: 5px 6px; }
-    #printFrame tr.zebra td { background: #f7f7f7 !important; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
-    #printFrame .sbadge { padding: 1px 7px; border-radius: 8px; font-size: 11px; font-weight: 700; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
-    #printFrame .s-open     { background: #cce5ff !important; color: #004085 !important; }
-    #printFrame .s-inprog   { background: #fff3cd !important; color: #856404 !important; }
-    #printFrame .s-complete { background: #d4edda !important; color: #155724 !important; }
-    #printFrame .s-onhold   { background: #f8d7da !important; color: #721c24 !important; }
-    #printFrame .pf { margin-top: 14px; font-size: 10px; color: #aaa; text-align: center; border-top: 1px solid #eee; padding-top: 8px; }
-  }
 
   /* ---- Cloud Sync Badge ---- */
   #syncBadge {
@@ -2077,11 +2050,16 @@ function printReport() {
   const p     = proj();
   const today = new Date().toLocaleDateString('en-US', {month:'long', day:'numeric', year:'numeric'});
 
-  const sCls = s => {
-    if (s === 'Complete')    return 's-complete';
-    if (s === 'In Progress') return 's-inprog';
-    if (s === 'On Hold')     return 's-onhold';
-    return 's-open';
+  // Status badge colour (inline so it survives any CSS stripping)
+  const sBadge = s => {
+    const map = {
+      'Complete':    'background:#d4edda;color:#155724',
+      'In Progress': 'background:#fff3cd;color:#856404',
+      'On Hold':     'background:#f8d7da;color:#721c24',
+      'Open':        'background:#cce5ff;color:#004085'
+    };
+    const c = map[s] || map['Open'];
+    return `<span style="${c};padding:1px 8px;border-radius:8px;font-size:11px;font-weight:700;">${s||'Open'}</span>`;
   };
 
   // Group items by category
@@ -2091,38 +2069,66 @@ function printReport() {
     const catItems = _reportItems.filter(i => (i.cat || 'Uncategorized') === cat);
     const rows = catItems.map(item => {
       rowNum++;
-      const zebra = rowNum % 2 === 0 ? ' class="zebra"' : '';
-      return `<tr${zebra}>
-        <td style="color:#003087;font-weight:700;width:26px;">${rowNum}</td>
-        <td style="font-weight:500;">${item.desc}</td>
-        <td style="color:#555;width:150px;">${item.room||'—'}</td>
-        <td style="width:110px;"><span class="sbadge ${sCls(item.status||'Open')}">${item.status||'Open'}</span></td>
+      const bg = rowNum % 2 === 0 ? '#f5f5f5' : '#ffffff';
+      return `<tr>
+        <td style="background:${bg};padding:4px 5px;color:#003087;font-weight:700;width:24px;font-size:11px;">${rowNum}</td>
+        <td style="background:${bg};padding:4px 5px;font-size:12px;font-weight:500;">${item.desc}</td>
+        <td style="background:${bg};padding:4px 5px;font-size:11px;color:#555;width:145px;">${item.room||'—'}</td>
+        <td style="background:${bg};padding:4px 5px;width:105px;">${sBadge(item.status||'Open')}</td>
       </tr>`;
     }).join('');
-    return `<tr class="cat-hdr"><td colspan="4">🏷 ${cat} &nbsp;<span style="font-weight:400;opacity:.8;">(${catItems.length} item${catItems.length!==1?'s':''})</span></td></tr>${rows}`;
+    return `
+      <tr>
+        <td colspan="4" style="background:#003087;color:#fff;padding:5px 6px;font-size:11px;font-weight:700;letter-spacing:.4px;text-transform:uppercase;">
+          🏷 ${cat}&nbsp; <span style="font-weight:400;opacity:.8;">(${catItems.length} item${catItems.length!==1?'s':''})</span>
+        </td>
+      </tr>${rows}`;
   }).join('');
 
   const totalOpen = _reportItems.filter(i => i.status !== 'Complete').length;
   const totalDone = _reportItems.filter(i => i.status === 'Complete').length;
 
-  document.getElementById('printFrame').innerHTML = `
-    <div class="ph">
-      <div>
-        <h1>👷 ${_reportAssignee}</h1>
-        <p>${p ? p.name : ''}${p && p.address ? ' &nbsp;·&nbsp; ' + p.address : ''}</p>
+  const frame = document.getElementById('printFrame');
+  frame.innerHTML = `
+    <div style="font-family:Arial,sans-serif;padding:18px;color:#222;">
+      <div style="background:#003087;color:#fff;padding:12px 16px;border-radius:6px;margin-bottom:14px;display:flex;justify-content:space-between;align-items:center;">
+        <div>
+          <div style="font-size:16px;font-weight:700;margin-bottom:3px;">👷 ${_reportAssignee}</div>
+          <div style="font-size:11px;opacity:.85;">${p ? p.name : ''}${p && p.address ? ' · ' + p.address : ''}</div>
+        </div>
+        <div style="text-align:right;font-size:11px;line-height:1.7;">
+          ${today}<br>
+          ${_reportItems.length} items · ${totalOpen} open · ${totalDone} complete
+        </div>
       </div>
-      <div class="ph-r">${today}<br>${_reportItems.length} items &nbsp;·&nbsp; ${totalOpen} open &nbsp;·&nbsp; ${totalDone} complete</div>
-    </div>
-    <table>
-      <thead><tr><th>#</th><th>Issue Description</th><th>Location</th><th>Status</th></tr></thead>
-      <tbody>${sections}</tbody>
-    </table>
-    <div class="pf">ACEtech Construction Management &nbsp;·&nbsp; ${today}</div>`;
+      <table style="width:100%;border-collapse:collapse;font-family:Arial,sans-serif;">
+        <thead>
+          <tr style="background:#BF5700;color:#fff;">
+            <th style="padding:5px 5px;text-align:left;font-size:11px;width:24px;">#</th>
+            <th style="padding:5px 5px;text-align:left;font-size:11px;">Issue Description</th>
+            <th style="padding:5px 5px;text-align:left;font-size:11px;width:145px;">Location</th>
+            <th style="padding:5px 5px;text-align:left;font-size:11px;width:105px;">Status</th>
+          </tr>
+        </thead>
+        <tbody>${sections}</tbody>
+      </table>
+      <div style="margin-top:14px;font-size:10px;color:#aaa;text-align:center;border-top:1px solid #eee;padding-top:8px;">
+        ACEtech Construction Management · ${today}
+      </div>
+    </div>`;
+
+  // Hide every other element in body, show the frame
+  const siblings = Array.from(document.body.children).filter(el => el !== frame);
+  const prevDisplays = siblings.map(el => el.style.display);
+  siblings.forEach(el => { el.style.display = 'none'; });
+  frame.style.display = 'block';
 
   window.print();
 
-  // Clear print frame after a short delay so it doesn't persist
-  setTimeout(() => { document.getElementById('printFrame').innerHTML = ''; }, 1000);
+  // Restore everything after print dialog closes
+  siblings.forEach((el, i) => { el.style.display = prevDisplays[i]; });
+  frame.style.display = 'none';
+  frame.innerHTML = '';
 }
 
 function emailReport() {
